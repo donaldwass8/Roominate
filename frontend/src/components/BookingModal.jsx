@@ -1,0 +1,147 @@
+import React, { useState } from 'react';
+import { X, Calendar as CalIcon, Clock, CheckCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { createReservation } from '../services/reservationService';
+
+const BookingModal = ({ room, onClose, onConfirm }) => {
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('08:00');
+  const [endTime, setEndTime] = useState('09:00');
+  const [loading, setLoading] = useState(false);
+
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let i = 7; i <= 23; i++) {
+      ['00', '30'].forEach(min => {
+        const hour24 = i.toString().padStart(2, '0');
+        const value = `${hour24}:${min}`;
+        const period = i >= 12 ? 'PM' : 'AM';
+        const hour12 = i % 12 || 12;
+        const label = `${hour12}:${min} ${period}`;
+        options.push({ value, label });
+      });
+    }
+    return options;
+  };
+
+  const getTodayString = () => new Date().toISOString().split('T')[0];
+
+  const handleBook = async () => {
+    if (!date) {
+      toast.error("Please select a date.");
+      return;
+    }
+    
+    // Check if time is in the past
+    // Note: ISO 8601 parser natively handles this format properly in modern JS
+    const startDateTime = new Date(`${date}T${startTime}:00`);
+    if (startDateTime < new Date()) {
+      toast.error("Cannot book a time in the past.");
+      return;
+    }
+    
+    if (startTime >= endTime) {
+      toast.error("End time must be after start time.");
+      return;
+    }
+
+    setLoading(true);
+    // Hardcoded user ID as per instruction
+    const result = await createReservation("mock-user-001", room.id, `${date} ${startTime}`, `${date} ${endTime}`);
+    setLoading(false);
+    
+    if (result.success) {
+      toast.success(
+        <div className="flex gap-2 items-center">
+          <CheckCircle className="text-green-500 w-5 h-5" />
+          <span>Room booked successfully!</span>
+        </div>
+      );
+      if (onConfirm) onConfirm();
+      onClose();
+    } else {
+      toast.error(result.error || "Failed to book room.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+        <button 
+          onClick={onClose}
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full p-1 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        
+        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+          <h2 className="text-xl font-bold text-gray-900">Book Room</h2>
+          <p className="text-sm font-medium text-primary-orange mt-1">
+            {room.name} <span className="text-gray-400 font-normal ml-1">• {room.building_name}</span>
+          </p>
+        </div>
+
+        <div className="p-6 space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <CalIcon className="w-4 h-4 text-gray-400" /> Date
+            </label>
+            <input 
+              type="date" 
+              min={getTodayString()}
+              className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-gray-400" /> Start Time
+              </label>
+              <select 
+                className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm bg-white"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              >
+                {generateTimeOptions().map(time => <option key={time.value} value={time.value}>{time.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-gray-400" /> End Time
+              </label>
+              <select 
+                className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm bg-white"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              >
+                {generateTimeOptions().map(time => <option key={time.value} value={time.value}>{time.label}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 pt-2 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
+          <button 
+            onClick={onClose}
+            className="px-5 py-2 font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleBook}
+            disabled={loading}
+            className="px-6 py-2 bg-primary-orange hover:bg-[#A84A0E] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all disabled:opacity-70 flex items-center gap-2"
+          >
+            {loading ? <span className="w-4 h-4 border-2 border-white/60 border-t-white rounded-full animate-spin" /> : null}
+            Confirm Booking
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BookingModal;
