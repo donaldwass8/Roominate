@@ -93,15 +93,16 @@ const FilterPanel = ({ onFilterChange, onClearFilters }) => {
              <SlidersHorizontal className="w-4 h-4 text-primary-orange" /> Amenities
            </h4>
            <div className="grid grid-cols-2 gap-2">
-             {['Whiteboard', 'Projector', 'Outlets', 'TV'].map(am => {
+             {['projector', 'whiteboard', 'outlets', 'wifi', 'tv'].map(am => {
                const active = amenities.includes(am);
+               const displayName = am === 'tv' ? 'TV' : am.charAt(0).toUpperCase() + am.slice(1);
                return (
                  <label key={am} className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-md text-sm border transition-colors ${active ? 'bg-orange-50 border-orange-200 text-orange-900' : 'bg-gray-50 border-transparent text-gray-600 hover:bg-gray-100'}`}>
                    <input type="checkbox" className="hidden" checked={active} onChange={() => toggleAmenity(am)} />
                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${active ? 'bg-primary-orange border-primary-orange' : 'bg-white border-gray-300'}`}>
                      {active && <Check className="w-3 h-3 text-white" />}
                    </div>
-                   {am}
+                   {displayName}
                  </label>
                );
              })}
