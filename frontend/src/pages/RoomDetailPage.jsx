@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRoomById, getRooms } from '../services/roomService';
+import { CheckCircle2 } from 'lucide-react';
 
 const roomTypeDescriptions = {
   'Lecture Hall': 'Large lecture classroom designed for presentations and large group instructions. Ideal for review sessions, guest lectures, and organization meetings.',
@@ -73,6 +74,18 @@ const RoomDetailPage = () => {
       "Food allowed",
       "Not suitable for small group sessions"
     ];
+  }
+
+  // Parse amenities to handle both array and string formats from DB
+  let parsedAmenities = [];
+  if (Array.isArray(room.amenities)) {
+    parsedAmenities = room.amenities;
+  } else if (typeof room.amenities === 'string') {
+    let cleanStr = room.amenities;
+    if (cleanStr.startsWith('{') && cleanStr.endsWith('}')) {
+      cleanStr = cleanStr.slice(1, -1);
+    }
+    parsedAmenities = cleanStr.split(',').map(a => a.replace(/["']/g, '').trim()).filter(a => a !== '');
   }
 
   const roomType = room.room_type || 'Lecture Hall';
@@ -155,13 +168,16 @@ const RoomDetailPage = () => {
             {/* Amenities */}
             <div className="mb-7">
               <h2 className="text-[22px] font-bold text-black mb-1.5">Amenities:</h2>
-              <ul className="list-disc pl-5 text-gray-500 text-[15px] space-y-1">
-                {room.amenities && room.amenities.length > 0 ? (
-                  room.amenities.map((amenity, index) => (
-                    <li key={index}>{amenity}</li>
+              <ul className="flex flex-col gap-2 mt-2">
+                {parsedAmenities.length > 0 ? (
+                  parsedAmenities.map((amenity, index) => (
+                    <li key={index} className="flex items-center gap-2 text-gray-600 text-[15px] capitalize">
+                      <CheckCircle2 className="w-5 h-5 text-[#61B865] shrink-0" />
+                      {amenity.replace(/[-_]/g, ' ')}
+                    </li>
                   ))
                 ) : (
-                  <li>No amenities listed</li>
+                  <li className="text-gray-500 text-[15px]">No amenities listed</li>
                 )}
               </ul>
             </div>
