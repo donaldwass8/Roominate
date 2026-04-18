@@ -111,3 +111,29 @@ export const cancelReservation = async (reservationId) => {
   
   return { success: true };
 };
+
+export const getReservationsForRoom = async (roomId, monthStartDate, monthEndDate) => {
+  if (!supabase) return [];
+  
+  let query = supabase
+    .from('reservations')
+    .select('*')
+    .eq('room_id', roomId)
+    .neq('status', 'cancelled');
+    
+  if (monthStartDate) {
+    query = query.gte('start_time', monthStartDate.toISOString());
+  }
+  if (monthEndDate) {
+    query = query.lte('start_time', monthEndDate.toISOString());
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error('Error fetching room reservations:', error);
+    return [];
+  }
+  
+  return data || [];
+};
