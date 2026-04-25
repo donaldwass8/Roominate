@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getRoomById, getRooms } from '../services/roomService';
+import { getReservationsForRoom } from '../services/reservationService';
 import { CheckCircle2 } from 'lucide-react';
 
 const roomTypeDescriptions = {
@@ -26,6 +27,8 @@ const RoomDetailPage = () => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [similarRooms, setSimilarRooms] = useState([]);
+  const [todayStatus, setTodayStatus] = useState('Available Today');
+  const [statusColor, setStatusColor] = useState('bg-[#61B865] border-[#4CAF50]/20');
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -37,6 +40,63 @@ const RoomDetailPage = () => {
         const filtered = allRooms.filter(r => r.id !== id).slice(0, 2);
         setSimilarRooms(filtered);
       }
+
+      try {
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        const resData = await getReservationsForRoom(id, startOfDay, endOfDay);
+
+        let bookableStart = new Date();
+        bookableStart.setHours(7, 0, 0, 0);
+
+        const bookableEnd = new Date();
+        bookableEnd.setHours(23, 30, 0, 0);
+
+        if (now > bookableStart) {
+          const next = new Date(now);
+          const minutes = next.getMinutes();
+          if (minutes > 0 && minutes <= 30) {
+            next.setMinutes(30, 0, 0);
+          } else if (minutes > 30) {
+            next.setHours(next.getHours() + 1, 0, 0, 0);
+          } else {
+            next.setSeconds(0, 0);
+          }
+          bookableStart = next;
+        }
+
+        let totalAvailableMinutes = (bookableEnd - bookableStart) / (1000 * 60);
+        if (totalAvailableMinutes < 0) totalAvailableMinutes = 0;
+
+        let totalBookedMinutes = 0;
+        resData.forEach(res => {
+          const resStart = new Date(res.start_time);
+          const resEnd = new Date(res.end_time);
+          
+          const overlapStart = new Date(Math.max(bookableStart, resStart));
+          const overlapEnd = new Date(Math.min(bookableEnd, resEnd));
+          
+          const overlapMinutes = (overlapEnd - overlapStart) / (1000 * 60);
+          if (overlapMinutes > 0) {
+            totalBookedMinutes += overlapMinutes;
+          }
+        });
+
+        if (totalAvailableMinutes === 0 || (totalAvailableMinutes > 0 && totalBookedMinutes >= totalAvailableMinutes)) {
+          setTodayStatus('Not Available Today');
+          setStatusColor('bg-[#EF5350] border-[#D32F2F]/20');
+        } else if (resData.length > 0) {
+          setTodayStatus('Partially Available Today');
+          setStatusColor('bg-[#FFD54F] border-[#FBC02D]/20');
+        } else {
+          setTodayStatus('Available Today');
+          setStatusColor('bg-[#61B865] border-[#4CAF50]/20');
+        }
+      } catch (err) {
+        console.error("Failed to fetch reservations for today", err);
+      }
+
       setLoading(false);
     };
     fetchRoom();
@@ -99,8 +159,8 @@ const RoomDetailPage = () => {
         <div className="flex flex-col gap-5">
           <div className="flex flex-wrap items-center gap-4">
             <h1 className="text-3xl sm:text-4xl font-extrabold text-black">{room.name}</h1>
-            <div className="bg-[#61B865] text-black px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm border border-[#4CAF50]/20">
-              Available Today
+            <div className={`${statusColor} text-black px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm border`}>
+              {todayStatus}
             </div>
           </div>
 

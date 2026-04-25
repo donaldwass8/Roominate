@@ -23,23 +23,23 @@ const RoomCalendarPage = () => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reservations, setReservations] = useState([]);
-  
+
   const [currentDate, setCurrentDate] = useState(new Date()); // Current month shown
   const [selectedDate, setSelectedDate] = useState(new Date()); // The clicked day
-  
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       const roomData = await getRoomById(id);
       setRoom(roomData);
-      
+
       if (roomData) {
         // Fetch reservations for the whole current month
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         const startOfMonth = new Date(year, month, 1);
         const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
-        
+
         const resData = await getReservationsForRoom(id, startOfMonth, endOfMonth);
         setReservations(resData);
       }
@@ -84,12 +84,12 @@ const RoomCalendarPage = () => {
   const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 is Sunday
-  
+
   const monthNames = ["January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"];
-    
+
   const weekDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  
+
   // Calculate day cells
   const days = [];
   // Empty slots for days before the 1st
@@ -105,19 +105,70 @@ const RoomCalendarPage = () => {
     if (!day) return [];
     return reservations.filter(res => {
       const resDate = new Date(res.start_time);
-      return resDate.getDate() === day && 
-             resDate.getMonth() === month && 
-             resDate.getFullYear() === year;
+      return resDate.getDate() === day &&
+        resDate.getMonth() === month &&
+        resDate.getFullYear() === year;
     });
   };
 
   const getDayColorClass = (day) => {
     if (!day) return '';
     const dayBookings = getBookingsForDay(day);
-    // Simple logic for coloring
-    if (dayBookings.length === 0) return 'bg-[#4CAF50] text-black border-b-4 border-[#388E3C]'; // Green
-    if (dayBookings.length <= 2) return 'bg-[#FFD54F] text-black border-b-4 border-[#FBC02D]'; // Yellow
-    return 'bg-[#EF5350] text-black border-b-4 border-[#D32F2F]'; // Red
+    const dateToCheck = new Date(year, month, day);
+    const now = new Date();
+    const isToday =
+      dateToCheck.getDate() === now.getDate() &&
+      dateToCheck.getMonth() === now.getMonth() &&
+      dateToCheck.getFullYear() === now.getFullYear();
+    const isPast = dateToCheck < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const bookableEnd = new Date(dateToCheck);
+    bookableEnd.setHours(23, 30, 0, 0);
+
+    let bookableStart = new Date(dateToCheck);
+    bookableStart.setHours(7, 0, 0, 0);
+
+    if (isToday && now > bookableStart) {
+      const next = new Date(now);
+      const minutes = next.getMinutes();
+      if (minutes > 0 && minutes <= 30) {
+        next.setMinutes(30, 0, 0);
+      } else if (minutes > 30) {
+        next.setHours(next.getHours() + 1, 0, 0, 0);
+      } else {
+        next.setSeconds(0, 0);
+      }
+      bookableStart = next;
+    } else if (isPast) {
+      bookableStart.setHours(7, 0, 0, 0);
+    }
+
+    let totalAvailableMinutes = (bookableEnd - bookableStart) / (1000 * 60);
+    if (totalAvailableMinutes < 0) totalAvailableMinutes = 0;
+
+    let totalBookedMinutes = 0;
+    dayBookings.forEach(res => {
+      const resStart = new Date(res.start_time);
+      const resEnd = new Date(res.end_time);
+
+      const overlapStart = new Date(Math.max(bookableStart, resStart));
+      const overlapEnd = new Date(Math.min(bookableEnd, resEnd));
+
+      const overlapMinutes = (overlapEnd - overlapStart) / (1000 * 60);
+      if (overlapMinutes > 0) {
+        totalBookedMinutes += overlapMinutes;
+      }
+    });
+
+    if (totalAvailableMinutes === 0 || (totalAvailableMinutes > 0 && totalBookedMinutes >= totalAvailableMinutes)) {
+      return 'bg-[#EF5350] text-black border-b-4 border-[#D32F2F]'; // Red
+    }
+
+    if (dayBookings.length > 0) {
+      return 'bg-[#FFD54F] text-black border-b-4 border-[#FBC02D]'; // Yellow
+    }
+
+    return 'bg-[#4CAF50] text-black border-b-4 border-[#388E3C]'; // Green
   };
 
   const selectedDayBookings = getBookingsForDay(selectedDate.getDate());
@@ -125,13 +176,13 @@ const RoomCalendarPage = () => {
   return (
     <div className="max-w-[1400px] mx-auto p-4 lg:p-6 min-h-[85vh]">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-start">
-        
+
         {/* LEFT SIDEBAR: Room Info */}
         <div className="lg:col-span-3 flex flex-col h-full min-h-[500px]">
           <div className="bg-[#EFEFEF] rounded-2xl p-6 border border-gray-300 shadow-sm flex flex-col h-full">
             <h1 className="text-3xl font-normal text-gray-900 mb-6">{room.name}</h1>
             <p className="text-gray-800 mb-6 font-medium text-[15px]">{roomType}</p>
-            
+
             <div className="mb-6">
               <p className="text-gray-800 text-[15px]">Capacity: ~{room.capacity || 0} Occupants</p>
             </div>
@@ -151,7 +202,7 @@ const RoomCalendarPage = () => {
                 )}
               </ul>
             </div>
-            
+
             {/* Legend Key */}
             <div className="mt-8 pt-4 border-t-0">
               <h3 className="text-gray-800 text-[14px] mb-2 font-medium">Key:</h3>
@@ -178,17 +229,17 @@ const RoomCalendarPage = () => {
           <div className="bg-[#EFEFEF] rounded-2xl border border-gray-300 overflow-hidden shadow-sm">
             {/* Header */}
             <div className="bg-[#6B6B6B] text-black p-3 flex justify-between items-center px-6">
-               <button 
+              <button
                 onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
                 className="text-black hover:text-white font-bold text-xl px-2 transition-colors"
-               >&lsaquo;</button>
-               <h2 className="text-[22px] font-bold tracking-wide">{monthNames[month]}</h2>
-               <button 
+              >&lsaquo;</button>
+              <h2 className="text-[22px] font-bold tracking-wide">{monthNames[month]}</h2>
+              <button
                 onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
                 className="text-black hover:text-white font-bold text-xl px-2 transition-colors"
-               >&rsaquo;</button>
+              >&rsaquo;</button>
             </div>
-            
+
             <div className="bg-[#8A8A8A] text-black text-xs sm:text-[13px] font-bold py-1.5">
               <div className="grid grid-cols-7 text-center">
                 {weekDays.map(day => (
@@ -203,7 +254,7 @@ const RoomCalendarPage = () => {
                 {days.map((day, idx) => (
                   <div key={idx} className="aspect-[4/3] relative">
                     {day && (
-                      <button 
+                      <button
                         onClick={() => setSelectedDate(new Date(year, month, day))}
                         className={`w-full h-full rounded-xl flex items-center justify-center font-normal text-base sm:text-lg transition-transform hover:scale-105 shadow-sm 
                         ${getDayColorClass(day)} 

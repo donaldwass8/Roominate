@@ -24,10 +24,10 @@ const ReservationsPage = () => {
     fetchReservations();
   }, []);
 
-  const now = new Date().toISOString().split('T')[0];
+  const nowTime = new Date();
 
-  const upcoming = reservations.filter(r => r.status !== 'cancelled' && (!r.start_time || r.start_time >= now));
-  const past = reservations.filter(r => r.status !== 'cancelled' && r.start_time && r.start_time < now);
+  const upcoming = reservations.filter(r => r.status !== 'cancelled' && (!r.end_time || new Date(r.end_time) >= nowTime));
+  const past = reservations.filter(r => r.status !== 'cancelled' && r.end_time && new Date(r.end_time) < nowTime);
   const cancelled = reservations.filter(r => r.status === 'cancelled');
 
   const getActiveList = () => {
