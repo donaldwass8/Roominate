@@ -7,7 +7,7 @@ import QuickBookPanel from '../components/QuickBookPanel';
 import BookingModal from '../components/BookingModal';
 import { getUserStats } from '../services/userService';
 import { getReservations } from '../services/reservationService';
-import { getRooms } from '../services/roomService';
+import { getRooms, getFavorites } from '../services/roomService';
 import { getBuildings } from '../services/buildingService';
 
 const HomePage = () => {
@@ -15,18 +15,24 @@ const HomePage = () => {
   const [stats, setStats] = useState(null);
   const [upcoming, setUpcoming] = useState([]);
   const [quickRooms, setQuickRooms] = useState([]);
+  const [favoriteRoomId, setFavoriteRoomId] = useState(null);
   const [selectedRoomToBook, setSelectedRoomToBook] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [_stats, _reservations, _buildings, _rooms] = await Promise.all([
-        getUserStats('mock-user-001'),
-        getReservations('mock-user-001', 'upcoming'),
+      const [_stats, _reservations, _buildings, _rooms, _favorites] = await Promise.all([
+        getUserStats('a0000000-0000-0000-0000-000000000001'),
+        getReservations('a0000000-0000-0000-0000-000000000001', 'upcoming'),
         getBuildings(),
-        getRooms({ capacity: 2 })
+        getRooms({ capacity: 2 }),
+        getFavorites('a0000000-0000-0000-0000-000000000001')
       ]);
-      setStats(_stats);
+      setStats({
+        ..._stats,
+        favourite_room: _favorites.length > 0 ? _favorites[0].name : (_stats.favourite_room || '-')
+      });
+      setFavoriteRoomId(_favorites.length > 0 ? _favorites[0].id : null);
       setUpcoming(_reservations.slice(0, 3));
       setQuickRooms(_rooms);
     } catch (error) {
@@ -54,8 +60,8 @@ const HomePage = () => {
             {loading ? 'Checking your reservations...' : `You have ${upcoming.length} upcoming reservation${upcoming.length !== 1 ? 's' : ''} this week.`}
           </p>
         </div>
-        <Link 
-          to="/search" 
+        <Link
+          to="/search"
           className="bg-primary-orange hover:bg-[#A84A0E] text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:shadow transition-all self-start sm:self-auto"
         >
           ⚡ Book a Room
@@ -66,7 +72,13 @@ const HomePage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Active Bookings" value={stats?.active_bookings} loading={loading} />
         <StatCard label="Hours this Month" value={stats?.hours_this_month} loading={loading} />
-        <StatCard label="Favourite Room" value={stats?.favourite_room} loading={loading} />
+        {favoriteRoomId ? (
+          <Link to={`/rooms/${favoriteRoomId}`} className="block hover:scale-[1.02] transition-transform">
+            <StatCard label="Favourite Room" value={stats?.favourite_room} loading={loading} />
+          </Link>
+        ) : (
+          <StatCard label="Favourite Room" value={stats?.favourite_room} loading={loading} />
+        )}
         <StatCard label="Total Bookings" value={stats?.total_bookings} loading={loading} />
       </div>
 
@@ -80,7 +92,7 @@ const HomePage = () => {
               View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          
+
           <div className="space-y-4">
             {loading ? (
               <>
@@ -106,17 +118,17 @@ const HomePage = () => {
 
         {/* Right: Quick Book */}
         <div className="lg:w-2/5">
-          <QuickBookPanel 
-            rooms={quickRooms} 
-            loading={loading} 
-            onBookNow={(room) => setSelectedRoomToBook(room)} 
+          <QuickBookPanel
+            rooms={quickRooms}
+            loading={loading}
+            onBookNow={(room) => setSelectedRoomToBook(room)}
           />
         </div>
       </div>
 
       {/* Booking Modal */}
       {selectedRoomToBook && (
-        <BookingModal 
+        <BookingModal
           room={selectedRoomToBook}
           onClose={() => setSelectedRoomToBook(null)}
           onConfirm={handleBookingConfirmed}

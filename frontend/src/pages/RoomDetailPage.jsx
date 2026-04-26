@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getRoomById, getRooms } from '../services/roomService';
+import { getRoomById, getRooms, checkIsFavorite, addFavorite, removeFavorite } from '../services/roomService';
 import { getReservationsForRoom } from '../services/reservationService';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Heart } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const roomTypeDescriptions = {
   'Lecture Hall': 'Large lecture classroom designed for presentations and large group instructions. Ideal for review sessions, guest lectures, and organization meetings.',
@@ -29,6 +30,8 @@ const RoomDetailPage = () => {
   const [similarRooms, setSimilarRooms] = useState([]);
   const [todayStatus, setTodayStatus] = useState('Available Today');
   const [statusColor, setStatusColor] = useState('bg-[#61B865] border-[#4CAF50]/20');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -100,6 +103,9 @@ const RoomDetailPage = () => {
       setLoading(false);
     };
     fetchRoom();
+
+    // Check favorite status
+    checkIsFavorite('a0000000-0000-0000-0000-000000000001', id).then(setIsFavorite);
   }, [id]);
 
   if (loading) {
@@ -265,8 +271,25 @@ const RoomDetailPage = () => {
             <Link to={`/rooms/${id}/reserve`} className="bg-[#E67E22] hover:bg-[#d67118] text-black font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#d67118]/30">
               Reserve This Room
             </Link>
-            <button className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
-              Add to Favorites
+            <button
+              className={`${isFavorite ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' : 'bg-[#61B865] hover:bg-[#4cae4c] border-[#4cae4c]/30 text-black'} font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border flex items-center gap-2`}
+              disabled={favoriteLoading}
+              onClick={async () => {
+                setFavoriteLoading(true);
+                if (isFavorite) {
+                  const result = await removeFavorite('a0000000-0000-0000-0000-000000000001', id);
+                  if (result.success) { setIsFavorite(false); toast.success('Removed from favorites'); }
+                  else toast.error('Failed to remove favorite');
+                } else {
+                  const result = await addFavorite('a0000000-0000-0000-0000-000000000001', id);
+                  if (result.success) { setIsFavorite(true); toast.success('Added to favorites! ❤️'); }
+                  else toast.error('Failed to add favorite');
+                }
+                setFavoriteLoading(false);
+              }}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 stroke-red-500' : ''}`} />
+              {isFavorite ? 'Remove Favorite' : 'Set as Favorite'}
             </button>
           </div>
         </div>

@@ -11,7 +11,7 @@ const ReservationsPage = () => {
   const fetchReservations = async () => {
     setLoading(true);
     try {
-      const allRes = await getReservations('mock-user-001', null);
+      const allRes = await getReservations('a0000000-0000-0000-0000-000000000001', null);
       setReservations(allRes);
     } catch (error) {
       console.error("Error fetching reservations", error);

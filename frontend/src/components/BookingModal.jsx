@@ -49,7 +49,7 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
 
     setLoading(true);
     // Hardcoded user ID as per instruction
-    const result = await createReservation("mock-user-001", room.id, `${date} ${startTime}`, `${date} ${endTime}`, purpose, organizer);
+    const result = await createReservation("a0000000-0000-0000-0000-000000000001", room.id, `${date} ${startTime}`, `${date} ${endTime}`, purpose, organizer);
     setLoading(false);
     
     if (result.success) {

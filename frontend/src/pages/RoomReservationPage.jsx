@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { getRoomById, getRooms } from '../services/roomService';
+import { getRoomById, getRooms, checkIsFavorite, addFavorite, removeFavorite } from '../services/roomService';
 import { getReservationsForRoom, createReservation } from '../services/reservationService';
+import { Heart } from 'lucide-react';
 
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
@@ -45,6 +46,8 @@ const RoomReservationPage = () => {
   const [customDates, setCustomDates] = useState([]);
 
   const [loadingBooking, setLoadingBooking] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,6 +81,8 @@ const RoomReservationPage = () => {
       }
     };
     fetchData();
+    // Check favorite status separately so it doesn't re-run on month change
+    checkIsFavorite('a0000000-0000-0000-0000-000000000001', id).then(setIsFavorite);
   }, [id, navigate, selectedDate.getMonth(), selectedDate.getFullYear()]);
 
   if (loading || !room) {
@@ -232,7 +237,7 @@ const RoomReservationPage = () => {
     }
 
     setLoadingBooking(true);
-    const userId = 'mock-user-001';
+    const userId = 'a0000000-0000-0000-0000-000000000001';
 
     let allSuccess = true;
     for (const dateStr of availabilityStatus.validDatesToBook) {
@@ -598,10 +603,27 @@ const RoomReservationPage = () => {
             </ul>
           </div>
 
-          {/* Add to Favorites */}
+          {/* Set as Favorite */}
           <div className="mt-2 flex justify-center lg:justify-start">
-            <button className="bg-[#5EEB7A] hover:bg-[#4cae4c] text-black font-medium py-2 px-6 rounded-xl shadow-sm transition-colors text-sm border border-[#4cae4c]/30">
-              Add to Favorites
+            <button
+              className={`${isFavorite ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' : 'bg-[#5EEB7A] hover:bg-[#4cae4c] border-[#4cae4c]/30 text-black'} font-medium py-2 px-6 rounded-xl shadow-sm transition-colors text-sm border flex items-center gap-2`}
+              disabled={favoriteLoading}
+              onClick={async () => {
+                setFavoriteLoading(true);
+                if (isFavorite) {
+                  const result = await removeFavorite('a0000000-0000-0000-0000-000000000001', id);
+                  if (result.success) { setIsFavorite(false); toast.success('Removed from favorites'); }
+                  else toast.error('Failed to remove favorite');
+                } else {
+                  const result = await addFavorite('a0000000-0000-0000-0000-000000000001', id);
+                  if (result.success) { setIsFavorite(true); toast.success('Added to favorites! ❤️'); }
+                  else toast.error('Failed to add favorite');
+                }
+                setFavoriteLoading(false);
+              }}
+            >
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 stroke-red-500' : ''}`} />
+              {isFavorite ? 'Remove Favorite' : 'Set as Favorite'}
             </button>
           </div>
         </div>
