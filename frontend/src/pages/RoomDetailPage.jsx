@@ -73,10 +73,10 @@ const RoomDetailPage = () => {
         resData.forEach(res => {
           const resStart = new Date(res.start_time);
           const resEnd = new Date(res.end_time);
-          
+
           const overlapStart = new Date(Math.max(bookableStart, resStart));
           const overlapEnd = new Date(Math.min(bookableEnd, resEnd));
-          
+
           const overlapMinutes = (overlapEnd - overlapStart) / (1000 * 60);
           if (overlapMinutes > 0) {
             totalBookedMinutes += overlapMinutes;
@@ -167,7 +167,7 @@ const RoomDetailPage = () => {
           <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-gray-100 aspect-[16/10] relative">
             {/* Using a solid placeholder image of a lecture hall similar to the wireframe */}
             <img
-              src={room.image_url || "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=1200&q=80"}
+              src={room.image_url || "https://jindal.utdallas.edu/files/2021/05/geico-classroom-visit-class-visit-600-400.jpg"}
               alt={room.name}
               className="w-full h-full object-cover"
             />
@@ -262,9 +262,9 @@ const RoomDetailPage = () => {
             <button className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
               View Accessibility Info
             </button>
-            <button className="bg-[#E67E22] hover:bg-[#d67118] text-black font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#d67118]/30">
+            <Link to={`/rooms/${id}/reserve`} className="bg-[#E67E22] hover:bg-[#d67118] text-black font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#d67118]/30">
               Reserve This Room
-            </button>
+            </Link>
             <button className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
               Add to Favorites
             </button>

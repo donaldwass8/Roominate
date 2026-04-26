@@ -39,6 +39,8 @@ export const getReservations = async (userId, statusFilter = null) => {
   return (data || []).map(res => ({
     id: res.id,
     room_id: res.room_id,
+    raw_start_time: res.start_time,
+    raw_end_time: res.end_time,
     start_time: res.start_time ? new Date(res.start_time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Unknown',
     end_time: res.end_time ? new Date(res.end_time).toLocaleString([], { timeStyle: 'short' }) : 'Unknown',
     status: res.status || 'confirmed',
@@ -49,7 +51,7 @@ export const getReservations = async (userId, statusFilter = null) => {
   }));
 };
 
-export const createReservation = async (userId, roomId, startTime, endTime) => {
+export const createReservation = async (userId, roomId, startTime, endTime, purpose = null, organizerName = null) => {
   if (!supabase) return { success: false, error: 'Database API not connected yet.' };
   
   const startIso = new Date(startTime).toISOString();
@@ -82,7 +84,9 @@ export const createReservation = async (userId, roomId, startTime, endTime) => {
         room_id: roomId, 
         start_time: startIso, 
         end_time: endIso,
-        status: 'confirmed'
+        status: 'confirmed',
+        purpose: purpose,
+        organizer_name: organizerName
       }
     ])
     .select()

@@ -26,8 +26,8 @@ const ReservationsPage = () => {
 
   const nowTime = new Date();
 
-  const upcoming = reservations.filter(r => r.status !== 'cancelled' && (!r.end_time || new Date(r.end_time) >= nowTime));
-  const past = reservations.filter(r => r.status !== 'cancelled' && r.end_time && new Date(r.end_time) < nowTime);
+  const upcoming = reservations.filter(r => r.status !== 'cancelled' && (!r.raw_end_time || new Date(r.raw_end_time) >= nowTime));
+  const past = reservations.filter(r => r.status !== 'cancelled' && r.raw_end_time && new Date(r.raw_end_time) < nowTime);
   const cancelled = reservations.filter(r => r.status === 'cancelled');
 
   const getActiveList = () => {

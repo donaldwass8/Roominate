@@ -26,6 +26,7 @@ const RoomCalendarPage = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date()); // Current month shown
   const [selectedDate, setSelectedDate] = useState(new Date()); // The clicked day
+  const [searchMode, setSearchMode] = useState('Day'); // Search/Sort mode
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,6 +123,10 @@ const RoomCalendarPage = () => {
       dateToCheck.getFullYear() === now.getFullYear();
     const isPast = dateToCheck < new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
+    if (isPast) {
+      return 'bg-[#E5E7EB] text-gray-500 border-b-4 border-[#D1D5DB] opacity-70';
+    }
+
     const bookableEnd = new Date(dateToCheck);
     bookableEnd.setHours(23, 30, 0, 0);
 
@@ -139,8 +144,6 @@ const RoomCalendarPage = () => {
         next.setSeconds(0, 0);
       }
       bookableStart = next;
-    } else if (isPast) {
-      bookableStart.setHours(7, 0, 0, 0);
     }
 
     let totalAvailableMinutes = (bookableEnd - bookableStart) / (1000 * 60);
@@ -233,7 +236,7 @@ const RoomCalendarPage = () => {
                 onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
                 className="text-black hover:text-white font-bold text-xl px-2 transition-colors"
               >&lsaquo;</button>
-              <h2 className="text-[22px] font-bold tracking-wide">{monthNames[month]}</h2>
+              <h2 className="text-[22px] font-bold tracking-wide">{monthNames[month]} {year}</h2>
               <button
                 onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
                 className="text-black hover:text-white font-bold text-xl px-2 transition-colors"
@@ -273,14 +276,15 @@ const RoomCalendarPage = () => {
           <div className="mt-8">
             <h3 className="text-[22px] font-normal text-gray-800 mb-3">Search By:</h3>
             <div className="flex flex-wrap gap-4">
-              <select className="border border-gray-400 bg-white rounded-full px-5 py-1 text-gray-700 text-sm outline-none hover:bg-gray-50 appearance-none pr-10 relative bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23999%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]">
-                <option>Week</option>
-              </select>
-              <select className="border border-gray-400 bg-white rounded-full px-5 py-1 text-gray-700 text-sm outline-none hover:bg-gray-50 appearance-none pr-10 relative bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23999%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]" defaultValue="Month">
-                <option>Month</option>
-              </select>
-              <select className="border border-gray-400 bg-white rounded-full px-5 py-1 text-gray-700 text-sm outline-none hover:bg-gray-50 appearance-none pr-10 relative bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23999%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]">
-                <option>Semester</option>
+              <select 
+                className="border border-gray-400 bg-white rounded-full px-5 py-1 text-gray-700 text-sm outline-none hover:bg-gray-50 appearance-none pr-10 relative bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%20fill%3D%22%23999%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_8px_center]"
+                value={searchMode}
+                onChange={(e) => setSearchMode(e.target.value)}
+              >
+                <option value="Day">Day</option>
+                <option value="Week">Week</option>
+                <option value="Month">Month</option>
+                <option value="Semester">Semester</option>
               </select>
             </div>
           </div>
@@ -288,32 +292,62 @@ const RoomCalendarPage = () => {
 
         {/* RIGHT SIDEBAR: Selected Day Details */}
         <div className="lg:col-span-3 flex flex-col pt-0 lg:pt-16">
-          <div className="bg-[#EFEFEF] rounded-2xl p-6 border border-gray-300 shadow-sm flex flex-col min-h-[250px]">
-            <h2 className="text-[20px] font-normal text-gray-900 mb-2">Selected Day:</h2>
+          <div className="bg-[#EFEFEF] rounded-2xl p-6 border border-gray-300 shadow-sm flex flex-col min-h-[250px] max-h-[80vh] overflow-y-auto">
+            <h2 className="text-[20px] font-normal text-gray-900 mb-2">Selected {searchMode}:</h2>
             <ul className="list-disc pl-6 text-gray-800 text-[15px] font-normal mb-8">
-              <li>{monthNames[selectedDate.getMonth()]} {selectedDate.getDate()}{getOrdinalSuffix(selectedDate.getDate())}</li>
+              <li>
+                {searchMode === 'Day' && `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}${getOrdinalSuffix(selectedDate.getDate())}`}
+                {searchMode === 'Week' && `Week of ${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}${getOrdinalSuffix(selectedDate.getDate())}`}
+                {searchMode === 'Month' && `${monthNames[month]} ${year}`}
+                {searchMode === 'Semester' && `Current Semester`}
+              </li>
             </ul>
 
-            <h2 className="text-[18px] font-normal text-gray-900 mb-3">Bookings For This Day:</h2>
+            <h2 className="text-[18px] font-normal text-gray-900 mb-3">Bookings For This {searchMode}:</h2>
             <ul className="list-disc pl-6 text-gray-800 text-[14px] font-normal flex-1">
-              {selectedDayBookings.length > 0 ? (
-                selectedDayBookings.map((res, index) => (
-                  <li key={index} className="mb-3">
-                    {formatTime(res.start_time)}-{formatTime(res.end_time)}
-                    <ul className="list-[circle] pl-6 text-gray-600 mt-0.5">
-                      <li>Booked</li>
-                    </ul>
-                  </li>
-                ))
-              ) : (
-                <li className="text-gray-500 list-none -ml-6">No bookings for this day.</li>
-              )}
+              {(() => {
+                let displayBookings = [];
+                if (searchMode === 'Day') {
+                  displayBookings = getBookingsForDay(selectedDate.getDate());
+                } else if (searchMode === 'Week') {
+                  const startOfWeek = new Date(selectedDate);
+                  startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+                  startOfWeek.setHours(0,0,0,0);
+                  const endOfWeek = new Date(startOfWeek);
+                  endOfWeek.setDate(startOfWeek.getDate() + 6);
+                  endOfWeek.setHours(23,59,59,999);
+                  displayBookings = reservations.filter(res => {
+                    const d = new Date(res.start_time);
+                    return d >= startOfWeek && d <= endOfWeek;
+                  });
+                } else {
+                  displayBookings = reservations;
+                }
+                
+                displayBookings.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+
+                return displayBookings.length > 0 ? (
+                  displayBookings.map((res, index) => (
+                    <li key={index} className="mb-3">
+                      {searchMode !== 'Day' && (
+                        <div className="font-semibold text-gray-900 text-[13px]">{new Date(res.start_time).toLocaleDateString()}</div>
+                      )}
+                      {formatTime(res.start_time)}-{formatTime(res.end_time)}
+                      <ul className="list-[circle] pl-6 text-gray-600 mt-0.5">
+                        <li>Booked</li>
+                      </ul>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-gray-500 list-none -ml-6">No bookings for this {searchMode.toLowerCase()}.</li>
+                );
+              })()}
             </ul>
 
             <div className="mt-8 flex justify-end">
-              <button className="bg-[#D97706] hover:bg-amber-600 text-black font-medium py-2 px-4 rounded-xl shadow-sm transition-transform hover:-translate-y-0.5 border border-[#c66412] text-sm">
+              <Link to={`/rooms/${id}/reserve`} className="bg-[#D97706] hover:bg-amber-600 text-black font-medium py-2 px-4 rounded-xl shadow-sm transition-transform hover:-translate-y-0.5 border border-[#c66412] text-sm text-center">
                 Reserve This Room
-              </button>
+              </Link>
             </div>
           </div>
         </div>

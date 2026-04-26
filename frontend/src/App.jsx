@@ -6,6 +6,7 @@ import SearchPage from './pages/SearchPage';
 import ReservationsPage from './pages/ReservationsPage';
 import RoomDetailPage from './pages/RoomDetailPage';
 import RoomCalendarPage from './pages/RoomCalendarPage';
+import RoomReservationPage from './pages/RoomReservationPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/reservations" element={<ReservationsPage />} />
             <Route path="/rooms/:id" element={<RoomDetailPage />} />
             <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
+            <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
           </Routes>
         </main>
         <Toaster position="bottom-right" />

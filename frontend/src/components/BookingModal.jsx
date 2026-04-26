@@ -7,6 +7,8 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
   const [date, setDate] = useState('');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('09:00');
+  const [purpose, setPurpose] = useState('Study Session');
+  const [organizer, setOrganizer] = useState('');
   const [loading, setLoading] = useState(false);
 
   const generateTimeOptions = () => {
@@ -47,7 +49,7 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
 
     setLoading(true);
     // Hardcoded user ID as per instruction
-    const result = await createReservation("mock-user-001", room.id, `${date} ${startTime}`, `${date} ${endTime}`);
+    const result = await createReservation("mock-user-001", room.id, `${date} ${startTime}`, `${date} ${endTime}`, purpose, organizer);
     setLoading(false);
     
     if (result.success) {
@@ -119,6 +121,38 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
               >
                 {generateTimeOptions().map(time => <option key={time.value} value={time.value}>{time.label}</option>)}
               </select>
+            </div>
+          </div>
+          <div className="space-y-4 pt-1">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                Booking Purpose
+              </label>
+              <select 
+                className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm bg-white"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+              >
+                <option value="Study Session">Study Session</option>
+                <option value="Student Org.">Student Org.</option>
+                <option value="Workshop">Workshop</option>
+                <option value="Tutoring">Tutoring</option>
+                <option value="Interview">Interview</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                Organization/Host
+              </label>
+              <input 
+                type="text" 
+                placeholder="Organizer Name"
+                className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm"
+                value={organizer}
+                onChange={(e) => setOrganizer(e.target.value)}
+              />
             </div>
           </div>
         </div>
