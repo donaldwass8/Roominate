@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Calendar as CalIcon, Clock, CheckCircle } from 'lucide-react';
+import { X, Calendar as CalIcon, Clock, CheckCircle, Phone, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { createReservation } from '../services/reservationService';
+import { sendBookingConfirmationSms } from '../services/notificationService';
 
 const BookingModal = ({ room, onClose, onConfirm }) => {
   const [date, setDate] = useState('');
@@ -9,6 +10,10 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
   const [endTime, setEndTime] = useState('09:00');
   const [purpose, setPurpose] = useState('Study Session');
   const [organizer, setOrganizer] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [sendTextReminders, setSendTextReminders] = useState(true);
+  const [sendEmailConfirmation, setSendEmailConfirmation] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const generateTimeOptions = () => {
@@ -59,6 +64,30 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
           <span>Room booked successfully!</span>
         </div>
       );
+
+      // Send SMS confirmation if enabled and phone number was provided
+      if (sendTextReminders && phone.trim()) {
+        const dateObj = new Date(`${date}T${startTime}:00`);
+        const endObj  = new Date(`${date}T${endTime}:00`);
+        const dateStr = dateObj.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const startStr = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const endStr   = endObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+        sendBookingConfirmationSms({
+          phone: phone.trim(),
+          roomName: room.name,
+          building: room.building_name,
+          date: dateStr,
+          startTime: startStr,
+          endTime: endStr,
+        }).then(smsResult => {
+          if (smsResult.success) {
+            toast.success('📱 SMS confirmation sent!', { duration: 3000 });
+          }
+          // Silently ignore SMS failures — booking already succeeded
+        });
+      }
+
       if (onConfirm) onConfirm();
       onClose();
     } else {
@@ -153,6 +182,59 @@ const BookingModal = ({ room, onClose, onConfirm }) => {
                 value={organizer}
                 onChange={(e) => setOrganizer(e.target.value)}
               />
+            </div>
+
+            <div className="pt-2 border-t border-gray-100">
+              <label className="block text-sm font-bold text-gray-800 mb-3">Notification Preferences</label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange" 
+                      checked={sendEmailConfirmation}
+                      onChange={(e) => setSendEmailConfirmation(e.target.checked)}
+                    />
+                    Email confirmation
+                  </label>
+                  {sendEmailConfirmation && (
+                    <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                      <input
+                        type="email"
+                        placeholder="your@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full h-9 px-9 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm"
+                      />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange" 
+                      checked={sendTextReminders}
+                      onChange={(e) => setSendTextReminders(e.target.checked)}
+                    />
+                    Text reminders
+                  </label>
+                  {sendTextReminders && (
+                    <div className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                      <input
+                        type="tel"
+                        placeholder="+1 555 000 0000"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="w-full h-9 px-9 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-orange focus:border-primary-orange outline-none transition-shadow text-sm"
+                      />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

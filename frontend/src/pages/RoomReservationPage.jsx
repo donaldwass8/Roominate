@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getRoomById, getRooms, checkIsFavorite, addFavorite, removeFavorite } from '../services/roomService';
 import { getReservationsForRoom, createReservation } from '../services/reservationService';
-import { Heart } from 'lucide-react';
+import { sendBookingConfirmationSms } from '../services/notificationService';
+import { Heart, Phone, Mail } from 'lucide-react';
 
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
@@ -39,6 +40,10 @@ const RoomReservationPage = () => {
   const [endTime, setEndTime] = useState('09:00');
   const [purpose, setPurpose] = useState('Study Session');
   const [organizer, setOrganizer] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [sendTextReminders, setSendTextReminders] = useState(true);
+  const [sendEmailConfirmation, setSendEmailConfirmation] = useState(true);
 
   // Recurrence State
   const [recurrenceType, setRecurrenceType] = useState('none');
@@ -255,6 +260,31 @@ const RoomReservationPage = () => {
 
     if (allSuccess) {
       toast.success(availabilityStatus.validDatesToBook.length > 1 ? `Successfully booked ${availabilityStatus.validDatesToBook.length} reservations!` : "Room booked successfully!");
+      
+      // Send SMS confirmation if phone number was provided and reminders are enabled
+      if (sendTextReminders && phone.trim()) {
+        // Send notification for the first/main booking
+        const firstDateStr = availabilityStatus.validDatesToBook[0];
+        const dateObj = new Date(`${firstDateStr}T${startTime}:00`);
+        const endObj  = new Date(`${firstDateStr}T${endTime}:00`);
+        const dateDisplay = dateObj.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        const startStr = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const endStr   = endObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+        sendBookingConfirmationSms({
+          phone: phone.trim(),
+          roomName: room.name,
+          building: room.building_name,
+          date: dateDisplay,
+          startTime: startStr,
+          endTime: endStr,
+        }).then(smsResult => {
+          if (smsResult.success) {
+            toast.success('📱 SMS confirmation sent!', { duration: 3000 });
+          }
+        });
+      }
+
       if (availabilityStatus.isPartiallyAvailable) {
          toast("Note: Unavailable dates were automatically skipped.", { icon: '⚠️' });
       }
@@ -582,15 +612,55 @@ const RoomReservationPage = () => {
           {/* Notification Preferences */}
           <div className="bg-[#F5F5F5] rounded-xl p-4 border border-gray-300 shadow-sm">
             <h3 className="font-bold text-black text-[15px] mb-2">Notification Preferences:</h3>
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
-                <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-400" defaultChecked />
-                Email confirmation
-              </label>
-              <label className="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
-                <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-400" defaultChecked />
-                Text reminders
-              </label>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-3.5 h-3.5 rounded border-gray-400" 
+                    checked={sendEmailConfirmation}
+                    onChange={(e) => setSendEmailConfirmation(e.target.checked)}
+                  />
+                  Email confirmation
+                </label>
+                {sendEmailConfirmation && (
+                  <div className="relative mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <input
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full border border-gray-300 bg-white rounded-lg pl-8 pr-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-orange shadow-sm"
+                    />
+                    <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-[13px] text-gray-800 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-3.5 h-3.5 rounded border-gray-400" 
+                    checked={sendTextReminders}
+                    onChange={(e) => setSendTextReminders(e.target.checked)}
+                  />
+                  Text reminders
+                </label>
+                
+                {sendTextReminders && (
+                  <div className="relative mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <input
+                      type="tel"
+                      placeholder="+1 555 123 4567"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full border border-gray-300 bg-white rounded-lg pl-8 pr-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-orange shadow-sm"
+                    />
+                    <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
