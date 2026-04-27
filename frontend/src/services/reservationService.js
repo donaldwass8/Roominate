@@ -141,3 +141,41 @@ export const getReservationsForRoom = async (roomId, monthStartDate, monthEndDat
   
   return data || [];
 };
+
+export const getAllReservations = async () => {
+  if (!supabase) return [];
+  
+  const { data, error } = await supabase
+    .from('reservations')
+    .select(`
+      id, room_id, start_time, end_time, status, user_id, room_code,
+      study_rooms (
+        name,
+        capacity,
+        amenities,
+        buildings (
+          name
+        )
+      )
+    `)
+    .neq('status', 'cancelled')
+    .order('start_time', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all reservations:', error);
+    return [];
+  }
+
+  return (data || []).map(res => ({
+    id: res.id,
+    room_id: res.room_id,
+    start_time: res.start_time,
+    end_time: res.end_time,
+    status: res.status,
+    room_name: res.study_rooms?.name || 'Unknown Room',
+    capacity: res.study_rooms?.capacity || 0,
+    amenities: res.study_rooms?.amenities || [],
+    building_name: res.study_rooms?.buildings?.name || 'Unknown Building',
+    user_id: res.user_id
+  }));
+};

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User, ChevronDown } from 'lucide-react';
+import { useRole } from '../context/RoleContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { role, setRole } = useRole();
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -23,6 +26,12 @@ const Navbar = () => {
         <div className="hidden md:flex space-x-4">
           <Link to="/" className="text-white/90 text-sm hover:text-white transition-colors">Home</Link>
           <Link to="/reservations" className="text-white/90 text-sm hover:text-white transition-colors">My Reservations</Link>
+          {role === 'admin' && (
+            <>
+              <Link to="/utilization" className="text-white/90 text-sm hover:text-white transition-colors">Utilization</Link>
+              <Link to="/restore" className="text-white/90 text-sm hover:text-white transition-colors">Restore</Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -47,7 +56,44 @@ const Navbar = () => {
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-primary-orange"></span>
         </button>
         <div className="flex items-center space-x-2 pl-2 border-l border-white/20">
-          <span className="text-sm font-medium hidden sm:block cursor-pointer hover:opacity-80">Admin</span>
+          <div className="relative">
+            <button 
+              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+              className="hidden sm:flex items-center space-x-1 text-sm font-medium hover:opacity-80 transition-opacity outline-none"
+            >
+              <span className="capitalize">{role}</span>
+              <ChevronDown className="w-4 h-4 ml-0.5 opacity-80" />
+            </button>
+            
+            {isRoleDropdownOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsRoleDropdownOpen(false)}
+                ></div>
+                <div className="absolute right-0 mt-3 w-40 bg-white rounded-lg shadow-xl py-1 z-50 text-gray-800 border border-gray-100">
+                  <button
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'student' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
+                    onClick={() => {
+                      setRole('student');
+                      setIsRoleDropdownOpen(false);
+                    }}
+                  >
+                    View as Student
+                  </button>
+                  <button
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'admin' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
+                    onClick={() => {
+                      setRole('admin');
+                      setIsRoleDropdownOpen(false);
+                    }}
+                  >
+                    View as Admin
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button className="bg-white/20 p-1 rounded-full hover:bg-white/30 transition-colors">
             <User className="w-5 h-5" />
           </button>
