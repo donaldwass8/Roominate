@@ -10,6 +10,7 @@ import RoomCalendarPage from './pages/RoomCalendarPage';
 import RoomReservationPage from './pages/RoomReservationPage';
 import UtilizationPage from './pages/UtilizationPage';
 import RestorePage from './pages/RestorePage';
+import BookingHistoryPage from './pages/BookingHistoryPage';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path="/rooms/:id" element={<RoomDetailPage />} />
               <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
               <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
+              <Route path="/history" element={<BookingHistoryPage />} />
               <Route path="/utilization" element={<UtilizationPage />} />
               <Route path="/restore" element={<RestorePage />} />
             </Routes>

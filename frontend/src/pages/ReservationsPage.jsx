@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ReservationCard, { ReservationSkeleton } from '../components/ReservationCard';
 import { getReservations } from '../services/reservationService';
+import { useRole } from '../context/RoleContext';
 
 const ReservationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [reservations, setReservations] = useState([]);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const { role } = useRole();
 
   const fetchReservations = async () => {
     setLoading(true);
@@ -48,12 +50,22 @@ const ReservationsPage = () => {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">My Reservations</h1>
           <p className="text-gray-500 mt-1">Manage your study room bookings</p>
         </div>
-        <Link 
-          to="/search" 
-          className="bg-primary-orange hover:bg-[#A84A0E] text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:shadow transition-all"
-        >
-          ⚡ Book a Room
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link 
+            to="/search" 
+            className="bg-primary-orange hover:bg-[#A84A0E] text-white px-5 py-2.5 rounded-lg font-bold shadow-sm hover:shadow transition-all text-center"
+          >
+            ⚡ Book a Room
+          </Link>
+          {role === 'admin' && (
+            <Link 
+              to="/history" 
+              className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-5 py-2.5 rounded-lg font-bold shadow-sm hover:shadow transition-all text-center"
+            >
+              📜 Admin History
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="flex border-b border-gray-200">
