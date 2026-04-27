@@ -32,16 +32,32 @@ const UtilizationPage = () => {
     setIsAiLoading(true);
     setAiResponse(null);
     
-    // Fake mock delay for UI preview
+    // Hardcoded mock data for immediate UI results
     setTimeout(() => {
       setIsAiLoading(false);
-      setAiResponse({
-        recommendations: [
-          { room: "ECSW 2.323", building: "Engineering West", capacity: 60, reason: "Matches capacity. Currently completely 0% booked this Friday." },
-          { room: "LIB 4.400", building: "Library", capacity: 45, reason: "Available after 3 PM. Includes a projector and strong Wi-Fi suitable for a hackathon." }
-        ]
-      });
-    }, 2000);
+      
+      const query = aiQuery.toLowerCase();
+      let mockResults = [];
+
+      if (query.includes('hackathon') || query.includes('large') || query.includes('50')) {
+        mockResults = [
+          { room: "ECSW 2.323", building: "Engineering West", capacity: 60, reason: "Matches your large capacity needs. Features modular furniture for collaborative hacking." },
+          { room: "SCI 1.210", building: "Science Building", capacity: 80, reason: "Large lecture-style hall with power outlets at every seat." }
+        ];
+      } else if (query.includes('quiet') || query.includes('study') || query.includes('small')) {
+        mockResults = [
+          { room: "LIB 4.400", building: "McDermott Library", capacity: 8, reason: "A quiet, glass-enclosed room perfect for focused group study." },
+          { room: "JSOM 11.202", building: "Jindal School", capacity: 6, reason: "Quiet executive-style meeting room with high-speed Wi-Fi." }
+        ];
+      } else {
+        mockResults = [
+          { room: "SU 2.502", building: "Student Union", capacity: 25, reason: "Central location with built-in projector and presentation tools." },
+          { room: "AH2 1.104", building: "Arts & Humanities", capacity: 15, reason: "Modern creative space with writable glass walls." }
+        ];
+      }
+
+      setAiResponse({ recommendations: mockResults });
+    }, 1500);
   };
 
   const dashboardRef = useRef(null);
