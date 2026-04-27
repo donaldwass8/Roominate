@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUpRight, Clock, Building, Calendar, Download, FileText, Lightbulb, MoreHorizontal, Sparkles, Loader2, Play, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, Clock, Building, Calendar, Download, FileText, Lightbulb, MoreHorizontal } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';

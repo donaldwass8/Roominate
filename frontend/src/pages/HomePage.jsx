@@ -9,6 +9,7 @@ import { getUserStats } from '../services/userService';
 import { getReservations } from '../services/reservationService';
 import { getRooms, getFavorites } from '../services/roomService';
 import { getBuildings } from '../services/buildingService';
+import AiAssistant from '../components/AiAssistant';
 
 const HomePage = () => {
   const [loading, setLoading] = useState(true);
@@ -81,6 +82,9 @@ const HomePage = () => {
         )}
         <StatCard label="Total Bookings" value={stats?.total_bookings} loading={loading} />
       </div>
+
+      {/* AI Assistant */}
+      <AiAssistant />
 
       {/* Main content columns */}
       <div className="flex flex-col lg:flex-row gap-8">
