@@ -7,16 +7,8 @@ export const useRole = () => {
 };
 
 export const RoleProvider = ({ children }) => {
-  // Initialize role from localStorage or default to 'student'
-  const [role, setRole] = useState(() => {
-    const savedRole = localStorage.getItem('appRole');
-    return savedRole || 'student';
-  });
-
-  // Whenever role changes, save it to localStorage
-  useEffect(() => {
-    localStorage.setItem('appRole', role);
-  }, [role]);
+  // Always default to 'student' when the app first loads
+  const [role, setRole] = useState('student');
 
   // Expose role string and a helper function to toggle/switch
   const value = {
