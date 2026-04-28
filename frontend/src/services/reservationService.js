@@ -21,12 +21,15 @@ export const getReservations = async (userId, statusFilter = null) => {
 
   if (statusFilter === 'upcoming') {
     const now = new Date().toISOString();
-    query = query.gte('start_time', now).neq('status', 'cancelled');
+    query = query.gte('start_time', now).neq('status', 'cancelled').or('purpose.neq.MAINTENANCE,purpose.is.null');
   } else if (statusFilter === 'past') {
     const now = new Date().toISOString();
-    query = query.lt('start_time', now).neq('status', 'cancelled');
+    query = query.lt('start_time', now).neq('status', 'cancelled').or('purpose.neq.MAINTENANCE,purpose.is.null');
   } else if (statusFilter === 'cancelled') {
     query = query.eq('status', 'cancelled');
+  } else {
+    // Default to excluding maintenance from general lists
+    query = query.or('purpose.neq.MAINTENANCE,purpose.is.null');
   }
 
   const { data, error } = await query;
@@ -159,6 +162,7 @@ export const getAllReservations = async () => {
       )
     `)
     .neq('status', 'cancelled')
+    .or('purpose.neq.MAINTENANCE,purpose.is.null')
     .order('start_time', { ascending: false });
 
   if (error) {

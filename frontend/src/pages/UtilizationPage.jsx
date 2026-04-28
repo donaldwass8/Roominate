@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUpRight, Clock, Building, Calendar, Download, FileText, Lightbulb, MoreHorizontal } from 'lucide-react';
+import { Clock, Building, Calendar, Download, FileText, Lightbulb, MoreHorizontal, Sparkles, Loader2, Play, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { getAllReservations } from '../services/reservationService';
+import { getRooms } from '../services/roomService';
+import { disableRoom, enableRoom, getAllBlackouts } from '../services/maintenanceService';
+import { Plus, Trash2, Wrench, CheckCircle, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const COLORS = ['#f97316', '#3b82f6', '#22c55e', '#a855f7', '#ec4899', '#14b8a6'];
 
@@ -19,6 +23,11 @@ const UtilizationPage = () => {
   });
   const [buildingData, setBuildingData] = useState([]);
   const [usageTypeData, setUsageTypeData] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [blackouts, setBlackouts] = useState([]);
+  const [selectedRoomId, setSelectedRoomId] = useState('');
+  const [disableDate, setDisableDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   // AI Assistant State
   const [aiQuery, setAiQuery] = useState('');
@@ -76,7 +85,49 @@ const UtilizationPage = () => {
     };
 
     fetchData();
+    fetchRoomsAndBlackouts();
   }, []);
+
+  const fetchRoomsAndBlackouts = async () => {
+    const [rData, bData] = await Promise.all([
+      getRooms(),
+      getAllBlackouts()
+    ]);
+    setRooms(rData);
+    setBlackouts(bData);
+  };
+
+  const handleDisableRoom = async (e) => {
+    e.preventDefault();
+    if (!selectedRoomId || !disableDate) {
+      toast.error('Please select both a room and a date');
+      return;
+    }
+
+    setIsActionLoading(true);
+    const result = await disableRoom(selectedRoomId, disableDate);
+    setIsActionLoading(false);
+
+    if (result.success) {
+      toast.success('Room disabled successfully for the selected date');
+      fetchRoomsAndBlackouts();
+    } else {
+      toast.error(result.error || 'Failed to disable room');
+    }
+  };
+
+  const handleEnableRoom = async (blackoutId) => {
+    setIsActionLoading(true);
+    const result = await enableRoom(blackoutId);
+    setIsActionLoading(false);
+
+    if (result.success) {
+      toast.success('Room re-enabled successfully');
+      fetchRoomsAndBlackouts();
+    } else {
+      toast.error(result.error || 'Failed to re-enable room');
+    }
+  };
 
   const calculateStats = (data) => {
     let totalMs = 0;
@@ -378,6 +429,98 @@ const UtilizationPage = () => {
             ) : (
               <div className="w-full h-full flex justify-center items-center text-gray-400">No usage data available</div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Room Management Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Wrench className="w-5 h-5 text-gray-600" />
+            <h3 className="font-bold text-gray-900">Room Availability Management</h3>
+          </div>
+          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Tool</span>
+        </div>
+        
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Disable Room Form */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-gray-700">Disable Room for Maintenance</h4>
+            <form onSubmit={handleDisableRoom} className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Select Room</label>
+                <select 
+                  value={selectedRoomId}
+                  onChange={(e) => setSelectedRoomId(e.target.value)}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-orange outline-none"
+                >
+                  <option value="">-- Select a room --</option>
+                  {rooms.map(room => (
+                    <option key={room.id} value={room.id}>{room.name} ({room.building_name})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Select Date</label>
+                <input 
+                  type="date"
+                  value={disableDate}
+                  onChange={(e) => setDisableDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-orange outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isActionLoading || !selectedRoomId}
+                className="w-full flex items-center justify-center space-x-2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {isActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                <span>Disable Room for Day</span>
+              </button>
+              <p className="text-[10px] text-gray-400 italic">This will block all new reservations for the entire selected day.</p>
+            </form>
+          </div>
+
+          {/* Active Blackouts List */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-gray-700">Currently Disabled Rooms</h4>
+            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+              {blackouts.length > 0 ? (
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-100 text-xs font-semibold text-gray-600 uppercase sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2">Room</th>
+                      <th className="px-4 py-2">Date</th>
+                      <th className="px-4 py-2 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {blackouts.map(blackout => (
+                      <tr key={blackout.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-medium">{blackout.study_rooms?.name || 'Unknown'}</td>
+                        <td className="px-4 py-3 text-gray-500">{new Date(blackout.start_time).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button 
+                            onClick={() => handleEnableRoom(blackout.id)}
+                            disabled={isActionLoading}
+                            className="text-green-600 hover:text-green-700 font-semibold text-xs flex items-center justify-end space-x-1 ml-auto"
+                          >
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Re-enable</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-8 text-center text-gray-400 text-sm">
+                  No rooms are currently disabled.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

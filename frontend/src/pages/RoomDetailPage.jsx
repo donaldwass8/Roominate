@@ -86,7 +86,12 @@ const RoomDetailPage = () => {
           }
         });
 
-        if (totalAvailableMinutes === 0 || (totalAvailableMinutes > 0 && totalBookedMinutes >= totalAvailableMinutes)) {
+        const isUnderMaintenance = resData.some(res => res.purpose === 'MAINTENANCE');
+
+        if (isUnderMaintenance) {
+          setTodayStatus('Under Maintenance');
+          setStatusColor('bg-gray-200 border-gray-400');
+        } else if (totalAvailableMinutes === 0 || (totalAvailableMinutes > 0 && totalBookedMinutes >= totalAvailableMinutes)) {
           setTodayStatus('Not Available Today');
           setStatusColor('bg-[#EF5350] border-[#D32F2F]/20');
         } else if (resData.length > 0) {
@@ -268,9 +273,15 @@ const RoomDetailPage = () => {
             <button className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
               View Accessibility Info
             </button>
-            <Link to={`/rooms/${id}/reserve`} className="bg-[#E67E22] hover:bg-[#d67118] text-black font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#d67118]/30">
-              Reserve This Room
-            </Link>
+            {todayStatus === 'Under Maintenance' ? (
+              <button disabled className="bg-gray-200 text-gray-500 font-medium py-2.5 px-6 rounded-lg shadow-sm cursor-not-allowed text-sm sm:text-base border border-gray-300">
+                Out of Service
+              </button>
+            ) : (
+              <Link to={`/rooms/${id}/reserve`} className="bg-[#E67E22] hover:bg-[#d67118] text-black font-medium py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#d67118]/30">
+                Reserve This Room
+              </Link>
+            )}
             <button
               className={`${isFavorite ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' : 'bg-[#61B865] hover:bg-[#4cae4c] border-[#4cae4c]/30 text-black'} font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border flex items-center gap-2`}
               disabled={favoriteLoading}

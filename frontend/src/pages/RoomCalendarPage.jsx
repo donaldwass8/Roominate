@@ -220,7 +220,7 @@ const RoomCalendarPage = () => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 rounded-full bg-[#EF5350] border border-[#D32F2F]" />
-                  <span>Not Available</span>
+                  <span>Not Available / Maintenance</span>
                 </div>
               </div>
             </div>
@@ -334,7 +334,7 @@ const RoomCalendarPage = () => {
                       )}
                       {formatTime(res.start_time)}-{formatTime(res.end_time)}
                       <ul className="list-[circle] pl-6 text-gray-600 mt-0.5">
-                        <li>Booked</li>
+                        <li>{res.purpose === 'MAINTENANCE' ? 'Under Maintenance' : 'Booked'}</li>
                       </ul>
                     </li>
                   ))
