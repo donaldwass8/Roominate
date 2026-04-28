@@ -442,7 +442,7 @@ const UtilizationPage = () => {
           </div>
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Admin Tool</span>
         </div>
-        
+
         <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Disable Room Form */}
           <div className="space-y-4">
@@ -450,7 +450,7 @@ const UtilizationPage = () => {
             <form onSubmit={handleDisableRoom} className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Select Room</label>
-                <select 
+                <select
                   value={selectedRoomId}
                   onChange={(e) => setSelectedRoomId(e.target.value)}
                   className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-orange outline-none"
@@ -463,7 +463,7 @@ const UtilizationPage = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Select Date</label>
-                <input 
+                <input
                   type="date"
                   value={disableDate}
                   onChange={(e) => setDisableDate(e.target.value)}
@@ -502,7 +502,7 @@ const UtilizationPage = () => {
                         <td className="px-4 py-3 font-medium">{blackout.study_rooms?.name || 'Unknown'}</td>
                         <td className="px-4 py-3 text-gray-500">{new Date(blackout.start_time).toLocaleDateString()}</td>
                         <td className="px-4 py-3 text-right">
-                          <button 
+                          <button
                             onClick={() => handleEnableRoom(blackout.id)}
                             disabled={isActionLoading}
                             className="text-green-600 hover:text-green-700 font-semibold text-xs flex items-center justify-end space-x-1 ml-auto"
