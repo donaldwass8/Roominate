@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { RoleProvider } from './context/RoleContext';
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -28,16 +29,19 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/" element={<HomePage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/reservations" element={<ReservationsPage />} />
-              <Route path="/rooms/:id" element={<RoomDetailPage />} />
-              <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
-              <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
-              <Route path="/history" element={<BookingHistoryPage />} />
-              <Route path="/utilization" element={<UtilizationPage />} />
-              <Route path="/restore" element={<RestorePage />} />
-            </Routes>
+                
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/reservations" element={<ReservationsPage />} />
+                  <Route path="/rooms/:id" element={<RoomDetailPage />} />
+                  <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
+                  <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
+                  <Route path="/history" element={<BookingHistoryPage />} />
+                  <Route path="/utilization" element={<UtilizationPage />} />
+                  <Route path="/restore" element={<RestorePage />} />
+                </Route>
+              </Routes>
           </main>
           <Toaster position="bottom-right" />
         </div>
