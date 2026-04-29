@@ -270,9 +270,9 @@ const RoomDetailPage = () => {
             <Link to={`/rooms/${id}/calendar`} className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
               View Calendar
             </Link>
-            <button className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30">
+            <Link to={`/rooms/${id}/accessibility`} className="bg-[#61B865] hover:bg-[#4cae4c] text-black font-medium py-2.5 px-5 rounded-lg shadow-sm transition-colors text-sm sm:text-base border border-[#4cae4c]/30 flex items-center justify-center">
               View Accessibility Info
-            </button>
+            </Link>
             {todayStatus === 'Under Maintenance' ? (
               <button disabled className="bg-gray-200 text-gray-500 font-medium py-2.5 px-6 rounded-lg shadow-sm cursor-not-allowed text-sm sm:text-base border border-gray-300">
                 Out of Service
