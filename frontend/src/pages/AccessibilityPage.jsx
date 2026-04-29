@@ -168,7 +168,7 @@ const AccessibilityPage = () => {
           <div className="bg-white border-t border-gray-200 p-4 px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between rounded-b-xl gap-3">
             <p className="text-sm font-bold text-black">Last Verified: <span className="font-medium text-black">9:52:07 AM - 3/5/26</span></p>
             <p className="text-[13px] font-medium text-black">
-              Is something not right? Submit an <a href="#" className="text-[#F58220] hover:underline">Inaccurate Accessibility Information Report &rarr;</a>
+              Is something not right? Submit an <Link to={`/rooms/${id}/accessibility-report`} className="text-[#F58220] hover:underline">Inaccurate Accessibility Information Report &rarr;</Link>
             </p>
           </div>
         </div>

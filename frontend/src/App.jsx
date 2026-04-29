@@ -11,6 +11,7 @@ import RoomDetailPage from './pages/RoomDetailPage';
 import RoomCalendarPage from './pages/RoomCalendarPage';
 import RoomReservationPage from './pages/RoomReservationPage';
 import AccessibilityPage from './pages/AccessibilityPage';
+import AccessibilityReportPage from './pages/AccessibilityReportPage';
 import UtilizationPage from './pages/UtilizationPage';
 import RestorePage from './pages/RestorePage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
@@ -37,6 +38,7 @@ function App() {
                   <Route path="/reservations" element={<ReservationsPage />} />
                   <Route path="/rooms/:id" element={<RoomDetailPage />} />
                   <Route path="/rooms/:id/accessibility" element={<AccessibilityPage />} />
+                  <Route path="/rooms/:id/accessibility-report" element={<AccessibilityReportPage />} />
                   <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
                   <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
                   <Route path="/history" element={<BookingHistoryPage />} />
