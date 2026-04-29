@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getRoomById, getRooms, checkIsFavorite, addFavorite, removeFavorite } from '../services/roomService';
-import { getReservationsForRoom, createReservation } from '../services/reservationService';
+import { getReservationsForRoom, createReservation, getUserBookingStats } from '../services/reservationService';
 import { sendBookingConfirmationSms } from '../services/notificationService';
-import { Heart, Phone, Mail } from 'lucide-react';
+import { Heart, Phone, Mail, ShieldAlert } from 'lucide-react';
+import { useRole } from '../context/RoleContext';
 
 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
@@ -53,6 +54,8 @@ const RoomReservationPage = () => {
   const [loadingBooking, setLoadingBooking] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const { isAdmin } = useRole();
+  const [bookingStats, setBookingStats] = useState({ dailyCount: 0, upcomingCount: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +91,9 @@ const RoomReservationPage = () => {
     fetchData();
     // Check favorite status separately so it doesn't re-run on month change
     checkIsFavorite('a0000000-0000-0000-0000-000000000001', id).then(setIsFavorite);
+    
+    // Fetch booking stats
+    getUserBookingStats('a0000000-0000-0000-0000-000000000001').then(setBookingStats);
   }, [id, navigate, selectedDate.getMonth(), selectedDate.getFullYear()]);
 
   if (loading || !room) {
@@ -249,7 +255,7 @@ const RoomReservationPage = () => {
       const startDateTime = new Date(`${dateStr}T${startTime}:00`);
       const endDateTime = new Date(`${dateStr}T${endTime}:00`);
 
-      const result = await createReservation(userId, room.id, startDateTime, endDateTime, purpose, organizer);
+      const result = await createReservation(userId, room.id, startDateTime, endDateTime, purpose, organizer, isAdmin);
       if (!result.success) {
         allSuccess = false;
         toast.error(`Failed to book for ${dateStr}: ${result.error}`);
@@ -532,12 +538,30 @@ const RoomReservationPage = () => {
               />
             </div>
 
-            <div className="mb-auto">
-              <p className="text-xs font-bold text-black mb-1">Booking Limits Indicator:</p>
-              <ul className="list-disc pl-5 text-xs text-gray-800">
-                <li>Daily Bookings: 1/2</li>
-                <li>Weekly bookings: 1/5</li>
+            <div className={`mb-auto p-3 rounded-lg border ${isAdmin ? 'bg-indigo-50 border-indigo-100' : 'bg-orange-50 border-orange-100'}`}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <ShieldAlert className={`w-3.5 h-3.5 ${isAdmin ? 'text-indigo-600' : 'text-orange-600'}`} />
+                <p className="text-xs font-bold text-gray-900">{isAdmin ? 'Admin Mode: Limits Lifted' : 'Current Booking Usage:'}</p>
+              </div>
+              <ul className="space-y-1">
+                <li className="flex justify-between items-center text-[11px]">
+                  <span className="text-gray-600">Daily Bookings:</span>
+                  <span className={`font-bold ${bookingStats.dailyCount >= 2 && !isAdmin ? 'text-red-600' : 'text-gray-900'}`}>
+                    {bookingStats.dailyCount}/2
+                  </span>
+                </li>
+                <li className="flex justify-between items-center text-[11px]">
+                  <span className="text-gray-600">Upcoming Total:</span>
+                  <span className={`font-bold ${bookingStats.upcomingCount >= 5 && !isAdmin ? 'text-red-600' : 'text-gray-900'}`}>
+                    {bookingStats.upcomingCount}/5
+                  </span>
+                </li>
               </ul>
+              {!isAdmin && (
+                <p className="text-[9px] text-gray-500 mt-2 italic leading-tight">
+                  Max 4 hours per booking. Weekly usage counts towards upcoming limit.
+                </p>
+              )}
             </div>
 
             {/* Actions */}

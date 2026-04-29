@@ -54,11 +54,57 @@ export const getReservations = async (userId, statusFilter = null) => {
   }));
 };
 
-export const createReservation = async (userId, roomId, startTime, endTime, purpose = null, organizerName = null) => {
+export const createReservation = async (userId, roomId, startTime, endTime, purpose = null, organizerName = null, isAdmin = false) => {
   if (!supabase) return { success: false, error: 'Database API not connected yet.' };
   
   const startIso = new Date(startTime).toISOString();
   const endIso = new Date(endTime).toISOString();
+
+  // --- Booking Limits (Non-Admins only) ---
+  if (!isAdmin) {
+    // 1. Max Duration: 4 Hours
+    const durationMs = new Date(endTime) - new Date(startTime);
+    const maxDurationMs = 4 * 60 * 60 * 1000;
+    if (durationMs > maxDurationMs) {
+      return { success: false, error: 'Booking duration cannot exceed 4 hours.' };
+    }
+
+    // 2. Fetch user's existing non-cancelled bookings
+    const { data: userBookings, error: userError } = await supabase
+      .from('reservations')
+      .select('start_time, end_time, status')
+      .eq('user_id', userId)
+      .neq('status', 'cancelled');
+
+    if (userError) {
+      console.error('Error checking user limits:', userError);
+    } else if (userBookings) {
+      const now = new Date();
+      const bookingStart = new Date(startTime);
+      
+      // Check Daily Limit (2 per day)
+      const startOfDay = new Date(bookingStart);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(bookingStart);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const bookingsToday = userBookings.filter(b => {
+        const bStart = new Date(b.start_time);
+        return bStart >= startOfDay && bStart <= endOfDay;
+      });
+
+      if (bookingsToday.length >= 2) {
+        return { success: false, error: 'Daily booking limit reached (max 2 per day).' };
+      }
+
+      // Check Upcoming Limit (5 total)
+      const upcomingBookings = userBookings.filter(b => new Date(b.start_time) > now);
+      if (upcomingBookings.length >= 5) {
+        return { success: false, error: 'Total upcoming booking limit reached (max 5).' };
+      }
+    }
+  }
+  // --- End Booking Limits ---
 
   // Check for conflicts: existing reservation for the same room that overlaps.
   // Overlap logic: existing start < new end AND existing end > new start.
@@ -182,4 +228,34 @@ export const getAllReservations = async () => {
     building_name: res.study_rooms?.buildings?.name || 'Unknown Building',
     user_id: res.user_id
   }));
+};
+
+export const getUserBookingStats = async (userId) => {
+  if (!supabase) return { dailyCount: 0, upcomingCount: 0 };
+
+  const now = new Date();
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const { data, error } = await supabase
+    .from('reservations')
+    .select('start_time')
+    .eq('user_id', userId)
+    .neq('status', 'cancelled');
+
+  if (error) {
+    console.error('Error fetching user stats:', error);
+    return { dailyCount: 0, upcomingCount: 0 };
+  }
+
+  const dailyCount = data.filter(r => {
+    const d = new Date(r.start_time);
+    return d >= startOfDay && d <= endOfDay;
+  }).length;
+
+  const upcomingCount = data.filter(r => new Date(r.start_time) > now).length;
+
+  return { dailyCount, upcomingCount };
 };
