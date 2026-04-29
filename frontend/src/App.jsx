@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { RoleProvider } from './context/RoleContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
@@ -11,16 +12,23 @@ import RoomReservationPage from './pages/RoomReservationPage';
 import UtilizationPage from './pages/UtilizationPage';
 import RestorePage from './pages/RestorePage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 function App() {
   return (
-    <RoleProvider>
-      <Router>
-        <div className="min-h-screen bg-page-bg flex flex-col font-sans">
-          <Navbar />
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
+    <AuthProvider>
+      <RoleProvider>
+        <Router>
+          <div className="min-h-screen bg-page-bg flex flex-col font-sans">
+            <Navbar />
+            <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/" element={<HomePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/reservations" element={<ReservationsPage />} />
               <Route path="/rooms/:id" element={<RoomDetailPage />} />
@@ -35,6 +43,7 @@ function App() {
         </div>
       </Router>
     </RoleProvider>
+    </AuthProvider>
   );
 }
 

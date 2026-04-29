@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, User, ChevronDown } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { role, setRole } = useRole();
+  const { user, signOut } = useAuth();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   const handleSearch = (e) => {
@@ -51,53 +53,69 @@ const Navbar = () => {
 
       {/* Right: Profile */}
       <div className="flex items-center space-x-4 shrink-0 text-white">
-        <button className="hover:bg-white/10 p-1.5 rounded-full transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-primary-orange"></span>
-        </button>
-        <div className="flex items-center space-x-2 pl-2 border-l border-white/20">
-          <div className="relative">
-            <button 
-              onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className="hidden sm:flex items-center space-x-1 text-sm font-medium hover:opacity-80 transition-opacity outline-none"
-            >
-              <span className="capitalize">{role}</span>
-              <ChevronDown className="w-4 h-4 ml-0.5 opacity-80" />
+        {user ? (
+          <>
+            <button className="hover:bg-white/10 p-1.5 rounded-full transition-colors relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-400 rounded-full border border-primary-orange"></span>
             </button>
-            
-            {isRoleDropdownOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setIsRoleDropdownOpen(false)}
-                ></div>
-                <div className="absolute right-0 mt-3 w-40 bg-white rounded-lg shadow-xl py-1 z-50 text-gray-800 border border-gray-100">
-                  <button
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'student' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
-                    onClick={() => {
-                      setRole('student');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                  >
-                    View as Student
-                  </button>
-                  <button
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'admin' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
-                    onClick={() => {
-                      setRole('admin');
-                      setIsRoleDropdownOpen(false);
-                    }}
-                  >
-                    View as Admin
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="flex items-center space-x-2 pl-2 border-l border-white/20">
+              <div className="relative">
+                <button 
+                  onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                  className="hidden sm:flex items-center space-x-1 text-sm font-medium hover:opacity-80 transition-opacity outline-none"
+                >
+                  <span className="capitalize">{role}</span>
+                  <ChevronDown className="w-4 h-4 ml-0.5 opacity-80" />
+                </button>
+                
+                {isRoleDropdownOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsRoleDropdownOpen(false)}
+                    ></div>
+                    <div className="absolute right-0 mt-3 w-40 bg-white rounded-lg shadow-xl py-1 z-50 text-gray-800 border border-gray-100">
+                      <button
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'student' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
+                        onClick={() => {
+                          setRole('student');
+                          setIsRoleDropdownOpen(false);
+                        }}
+                      >
+                        View as Student
+                      </button>
+                      <button
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${role === 'admin' ? 'font-semibold bg-gray-50' : 'text-gray-600'}`}
+                        onClick={() => {
+                          setRole('admin');
+                          setIsRoleDropdownOpen(false);
+                        }}
+                      >
+                        View as Admin
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+              <button 
+                onClick={async () => {
+                  await signOut();
+                  navigate('/login');
+                }}
+                className="bg-white/20 p-1.5 px-3 text-sm font-medium rounded-full hover:bg-white/30 transition-colors flex items-center space-x-1"
+                title="Log Out"
+              >
+                <span>Log out</span>
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center space-x-4 text-sm font-medium">
+            <Link to="/login" className="hover:text-white/80 transition-colors">Log in</Link>
+            <Link to="/signup" className="bg-white text-primary-orange px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-sm">Sign up</Link>
           </div>
-          <button className="bg-white/20 p-1 rounded-full hover:bg-white/30 transition-colors">
-            <User className="w-5 h-5" />
-          </button>
-        </div>
+        )}
       </div>
     </nav>
   );
