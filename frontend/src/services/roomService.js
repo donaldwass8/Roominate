@@ -125,3 +125,19 @@ export const getFavorites = async (userId) => {
 
   return roomData || [];
 };
+
+export const updateRoomAccessibilityVerifiedTime = async (roomId, verifiedDateString) => {
+  if (!supabase) return { success: false, error: 'No supabase client' };
+  
+  // The view is rooms_with_building, so we update the underlying rooms table
+  const { error } = await supabase
+    .from('rooms')
+    .update({ accessibility_last_verified: verifiedDateString })
+    .eq('id', roomId);
+    
+  if (error) {
+    console.error('Error updating accessibility verified time:', error);
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+};

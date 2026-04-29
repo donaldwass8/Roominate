@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, Bell, User, ChevronDown } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import { useAuth } from '../context/AuthContext';
+import ConfirmModal from './ConfirmModal';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -10,6 +11,12 @@ const Navbar = () => {
   const { role, setRole } = useRole();
   const { user, signOut } = useAuth();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const handleLogoutConfirm = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -99,10 +106,7 @@ const Navbar = () => {
                 )}
               </div>
               <button 
-                onClick={async () => {
-                  await signOut();
-                  navigate('/login');
-                }}
+                onClick={() => setIsLogoutModalOpen(true)}
                 className="bg-white/20 p-1.5 px-3 text-sm font-medium rounded-full hover:bg-white/30 transition-colors flex items-center space-x-1"
                 title="Log Out"
               >
@@ -117,6 +121,15 @@ const Navbar = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogoutConfirm}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        confirmText="Log Out"
+      />
     </nav>
   );
 };

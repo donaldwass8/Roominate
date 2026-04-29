@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getRoomById } from '../services/roomService';
+import { getRoomById, updateRoomAccessibilityVerifiedTime } from '../services/roomService';
 import { X } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 const getOrdinalSuffix = (i) => {
   if (!i) return '';
@@ -16,6 +17,21 @@ const AccessibilityPage = () => {
   const { id } = useParams();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastVerifiedDate, setLastVerifiedDate] = useState('9:52:07 AM - 3/5/26');
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const handleValidateClick = () => {
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmValidation = async () => {
+    const now = new Date();
+    const formattedDate = `${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })} - ${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear().toString().slice(-2)}`;
+    
+    setLastVerifiedDate(formattedDate);
+    await updateRoomAccessibilityVerifiedTime(id, formattedDate);
+    setIsConfirmModalOpen(false);
+  };
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -23,6 +39,9 @@ const AccessibilityPage = () => {
       try {
         const data = await getRoomById(id);
         setRoom(data);
+        if (data && data.accessibility_last_verified) {
+          setLastVerifiedDate(data.accessibility_last_verified);
+        }
       } catch (err) {
         console.error("Failed to fetch room", err);
       } finally {
@@ -92,7 +111,7 @@ const AccessibilityPage = () => {
               </div>
             </div>
             <div className="p-3 border-t border-gray-200 bg-white">
-              <a href="#" className="text-[#F58220] text-[15px] font-medium hover:underline flex items-center gap-1">
+              <a href="https://accessability.utdallas.edu/" target="_blank" rel="noopener noreferrer" className="text-[#F58220] text-[15px] font-medium hover:underline flex items-center gap-1">
                 AccessAbility Resource Center (ARC) &rarr;
               </a>
             </div>
@@ -156,7 +175,10 @@ const AccessibilityPage = () => {
                 </div>
                 <div className="mt-5">
                   <p className="text-[13px] text-gray-700 mb-2 leading-snug font-medium">Is all information currently accurate and up-to-date?</p>
-                  <button className="w-full bg-[#F58220] hover:bg-[#e07519] text-black font-semibold py-2.5 px-4 rounded-lg shadow-sm text-sm transition-colors border border-[#e07519]/30">
+                  <button 
+                    onClick={handleValidateClick}
+                    className="w-full bg-[#F58220] hover:bg-[#e07519] text-black font-semibold py-2.5 px-4 rounded-lg shadow-sm text-sm transition-colors border border-[#e07519]/30"
+                  >
                     Submit Information Is Valid
                   </button>
                 </div>
@@ -166,7 +188,7 @@ const AccessibilityPage = () => {
           
           {/* Footer Line */}
           <div className="bg-white border-t border-gray-200 p-4 px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center justify-between rounded-b-xl gap-3">
-            <p className="text-sm font-bold text-black">Last Verified: <span className="font-medium text-black">9:52:07 AM - 3/5/26</span></p>
+            <p className="text-sm font-bold text-black">Last Verified: <span className="font-medium text-black">{lastVerifiedDate}</span></p>
             <p className="text-[13px] font-medium text-black">
               Is something not right? Submit an <Link to={`/rooms/${id}/accessibility-report`} className="text-[#F58220] hover:underline">Inaccurate Accessibility Information Report &rarr;</Link>
             </p>
@@ -174,6 +196,15 @@ const AccessibilityPage = () => {
         </div>
 
       </div>
+
+      <ConfirmModal 
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleConfirmValidation}
+        title="Verify Accessibility Info"
+        message="Confirm that all current accessibility information is up to date and accurate."
+        confirmText="Confirm"
+      />
     </div>
   );
 };

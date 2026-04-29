@@ -35,6 +35,7 @@ const AccessibilityReportPage = () => {
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastVerifiedDate, setLastVerifiedDate] = useState('9:52:07 AM - 3/5/26');
 
   // Form State
   const [features, setFeatures] = useState({
@@ -65,6 +66,9 @@ const AccessibilityReportPage = () => {
       try {
         const data = await getRoomById(id);
         setRoom(data);
+        if (data && data.accessibility_last_verified) {
+          setLastVerifiedDate(data.accessibility_last_verified);
+        }
       } catch (err) {
         console.error("Failed to fetch room", err);
       } finally {
@@ -136,7 +140,7 @@ const AccessibilityReportPage = () => {
               </div>
               <div>
                 <p className="text-[15px] font-bold text-black mb-0.5">Last Verified Date</p>
-                <p className="text-[14px] text-gray-700">9:52:07 AM - 3/5/26</p>
+                <p className="text-[14px] text-gray-700">{lastVerifiedDate}</p>
               </div>
             </div>
           </div>
