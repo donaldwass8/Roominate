@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2, Play, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AiAssistant = () => {
+  const navigate = useNavigate();
   const [aiQuery, setAiQuery] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState(null);
@@ -18,8 +20,8 @@ const AiAssistant = () => {
       setIsAiLoading(false);
       setAiResponse({
         recommendations: [
-          { room: "ECSW 2.323", building: "Engineering West", capacity: 60, reason: "Matches capacity perfectly. Currently 0% booked this Friday." },
-          { room: "LIB 4.400", building: "Library", capacity: 45, reason: "Available after 3 PM. Includes a projector and strong Wi-Fi suitable for a hackathon or large event." }
+          { id: "4f46c2db-ebc8-42ba-9b5b-a18f136c2ba4", room: "ECSW 3.104", building: "Engineering West", capacity: 6, reason: "Matches capacity perfectly. Currently 0% booked this Friday." },
+          { id: "81987c32-41d2-4880-9421-46d7a3fb0fcb", room: "ECSW 1.315", building: "Engineering West", capacity: 8, reason: "Available after 3 PM. Includes a whiteboard and strong Wi-Fi suitable for a study session." }
         ]
       });
     }, 2000);
@@ -74,7 +76,10 @@ const AiAssistant = () => {
                   </div>
                   <div className="text-xs font-semibold text-gray-500 mb-2">{rec.building}</div>
                   <p className="text-xs text-gray-700 leading-tight">{rec.reason}</p>
-                  <button className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group">
+                  <button 
+                    onClick={() => navigate(`/rooms/${rec.id}/reserve`)}
+                    className="mt-3 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center group"
+                  >
                     Book this room <ArrowRight className="w-3 h-3 ml-1 transform group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
