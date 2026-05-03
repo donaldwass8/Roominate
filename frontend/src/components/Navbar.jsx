@@ -4,18 +4,51 @@ import { Search, Bell, User, ChevronDown } from 'lucide-react';
 import { useRole } from '../context/RoleContext';
 import { useAuth } from '../context/AuthContext';
 import ConfirmModal from './ConfirmModal';
+import { supabase } from '../supabaseClient';
+import toast from 'react-hot-toast';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { role, setRole } = useRole();
-  const { user, signOut } = useAuth();
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   const handleLogoutConfirm = async () => {
     await signOut();
     navigate('/login');
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData?.session?.access_token) {
+        toast.error("You must be signed in to delete your account.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Delete account error:", error);
+        toast.error("We could not delete your account. Please try again.");
+        return;
+      }
+
+      await signOut();
+      navigate('/login');
+    } catch (err) {
+      console.error("Delete account error:", err);
+      toast.error("We could not delete your account. Please try again.");
+    }
   };
 
   const handleSearch = (e) => {
@@ -129,6 +162,26 @@ const Navbar = () => {
         title="Log Out"
         message="Are you sure you want to log out?"
         confirmText="Log Out"
+      >
+        <button 
+          onClick={() => {
+            setIsLogoutModalOpen(false);
+            setIsDeleteModalOpen(true);
+          }}
+          className="text-xs text-gray-400 hover:text-red-500 hover:underline transition-colors mt-2"
+        >
+          Delete my account
+        </button>
+      </ConfirmModal>
+
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Account"
+        message="Are you absolutely sure you want to delete your account? This action cannot be undone and you will lose all your reservations."
+        confirmText="Delete Account"
+        cancelText="Cancel"
       />
     </nav>
   );

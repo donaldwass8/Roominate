@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
       redirectTo: `${window.location.origin}/reset-password`,
     }),
     updatePassword: (newPassword) => supabase?.auth.updateUser({ password: newPassword }),
+    deleteAccount: () => supabase?.functions.invoke('delete-account'),
   };
 
   return (

@@ -2,7 +2,7 @@ import { supabase } from '../supabaseClient';
 
 export const getRooms = async (filters = {}) => {
   if (!supabase) return [];
-  
+
   // Use the view provided by user
   let query = supabase.from('rooms_with_building').select('*');
 
@@ -17,7 +17,7 @@ export const getRooms = async (filters = {}) => {
   }
 
   const { data, error } = await query;
-  
+
   if (error) {
     console.error('Error fetching rooms (view: rooms_with_building):', error);
     return [];
@@ -38,12 +38,12 @@ export const getRoomById = async (id) => {
     .select('*')
     .eq('id', id)
     .single();
-    
+
   if (error) {
     console.error('Error fetching room by id:', error);
     return null;
   }
-  
+
   return data;
 };
 
@@ -60,7 +60,7 @@ export const checkIsFavorite = async (userId, roomId) => {
     console.error('Error checking favorite:', error);
     return false;
   }
-  
+
   return !!data;
 };
 
@@ -128,13 +128,13 @@ export const getFavorites = async (userId) => {
 
 export const updateRoomAccessibilityVerifiedTime = async (roomId, verifiedDateString) => {
   if (!supabase) return { success: false, error: 'No supabase client' };
-  
+
   // The view is rooms_with_building, so we update the underlying rooms table
   const { error } = await supabase
     .from('rooms')
     .update({ accessibility_last_verified: verifiedDateString })
     .eq('id', roomId);
-    
+
   if (error) {
     console.error('Error updating accessibility verified time:', error);
     return { success: false, error: error.message };
