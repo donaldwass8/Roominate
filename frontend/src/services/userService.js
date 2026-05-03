@@ -29,7 +29,9 @@ export const getUserStats = async (userId) => {
         active++;
       }
       
-      if (start.getMonth() === currentMonth && start.getFullYear() === currentYear && res.status !== 'cancelled') {
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+      
+      if (start >= thirtyDaysAgo && res.status !== 'cancelled') {
         const diffMs = end - start;
         hours += (diffMs / (1000 * 60 * 60));
       }
