@@ -13,14 +13,15 @@ const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
 const generateTimeOptions = () => {
   const options = [];
   for (let i = 7; i <= 23; i++) {
-    ['00', '30'].forEach(min => {
+    for (let m = 0; m < 60; m += 5) {
+      const min = m.toString().padStart(2, '0');
       const hour24 = i.toString().padStart(2, '0');
       const value = `${hour24}:${min}`;
       const period = i >= 12 ? 'PM' : 'AM';
       const hour12 = i % 12 || 12;
       const label = `${hour12}:${min} ${period}`;
       options.push({ value, label });
-    });
+    }
   }
   return options;
 };

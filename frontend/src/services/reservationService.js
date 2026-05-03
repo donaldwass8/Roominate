@@ -106,15 +106,23 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
   }
   // --- End Booking Limits ---
 
-  // Check for conflicts: existing reservation for the same room that overlaps.
-  // Overlap logic: existing start < new end AND existing end > new start.
+  // --- FR-16: Automatically enforce a 5-minute buffer after each room reservation. ---
+  // A new reservation cannot start within 5 minutes of an existing reservation's end.
+  // And a new reservation cannot end within 5 minutes of an existing reservation's start.
+  // We check this by expanding the new reservation's conflict window by 5 minutes on both sides.
+  const newStartObj = new Date(startTime);
+  const newEndObj = new Date(endTime);
+  
+  const newEndWithBuffer = new Date(newEndObj.getTime() + 5 * 60000).toISOString();
+  const newStartMinusBuffer = new Date(newStartObj.getTime() - 5 * 60000).toISOString();
+
   const { data: conflicts, error: conflictError } = await supabase
     .from('reservations')
-    .select('id')
+    .select('id, start_time, end_time')
     .eq('room_id', roomId)
     .neq('status', 'cancelled')
-    .lt('start_time', endIso)
-    .gt('end_time', startIso);
+    .lt('start_time', newEndWithBuffer)
+    .gt('end_time', newStartMinusBuffer);
 
   if (conflictError) {
     console.error('Error checking conflicts:', conflictError);
@@ -122,7 +130,7 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
   }
 
   if (conflicts && conflicts.length > 0) {
-    return { success: false, error: 'This room is already booked for the selected time window. Please choose another time.' };
+    return { success: false, error: 'This room requires a 5-minute buffer after each reservation. Please choose a different time.' };
   }
 
   const { data, error } = await supabase
