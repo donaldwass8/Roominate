@@ -259,3 +259,48 @@ export const getUserBookingStats = async (userId) => {
 
   return { dailyCount, upcomingCount };
 };
+
+export const getReservationById = async (id) => {
+  if (!supabase) return null;
+  
+  const { data, error } = await supabase
+    .from('reservations')
+    .select(`
+      id, room_id, start_time, end_time, status, user_id, room_code, purpose, organizer_name,
+      study_rooms (
+        name,
+        capacity,
+        amenities,
+        usage_notes,
+        buildings (
+          name
+        )
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching reservation by id:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    room_id: data.room_id,
+    start_time: data.start_time,
+    end_time: data.end_time,
+    status: data.status,
+    purpose: data.purpose,
+    organizer_name: data.organizer_name,
+    user_id: data.user_id,
+    room_code: data.room_code,
+    room_name: data.study_rooms?.name || 'Unknown Room',
+    capacity: data.study_rooms?.capacity || 0,
+    amenities: data.study_rooms?.amenities || [],
+    usage_notes: data.study_rooms?.usage_notes || '',
+    building_name: data.study_rooms?.buildings?.name || 'Unknown Building'
+  };
+};

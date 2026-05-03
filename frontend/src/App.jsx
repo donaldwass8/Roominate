@@ -15,6 +15,7 @@ import AccessibilityReportPage from './pages/AccessibilityReportPage';
 import UtilizationPage from './pages/UtilizationPage';
 import RestorePage from './pages/RestorePage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
+import AdminBookingDetailsPage from './pages/AdminBookingDetailsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -42,6 +43,7 @@ function App() {
                   <Route path="/rooms/:id/calendar" element={<RoomCalendarPage />} />
                   <Route path="/rooms/:id/reserve" element={<RoomReservationPage />} />
                   <Route path="/history" element={<BookingHistoryPage />} />
+                  <Route path="/history/:id" element={<AdminBookingDetailsPage />} />
                   <Route path="/utilization" element={<UtilizationPage />} />
                   <Route path="/restore" element={<RestorePage />} />
                 </Route>
