@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getReservationById } from '../services/reservationService';
 import toast from 'react-hot-toast';
 
@@ -139,8 +139,8 @@ const AdminBookingDetailsPage = () => {
             onPlaceholderClick={handlePlaceholderClick}
             footerContent={
               <div className="flex flex-col gap-1 text-sm text-[#F58220] font-medium w-full px-1">
-                <button onClick={handlePlaceholderClick} className="hover:underline text-left">View Room Details &rarr;</button>
-                <button onClick={handlePlaceholderClick} className="hover:underline text-left">View Room Calendar &rarr;</button>
+                <Link to={`/rooms/${reservation.room_id}`} className="hover:underline text-left">View Room Details &rarr;</Link>
+                <Link to={`/rooms/${reservation.room_id}/calendar`} className="hover:underline text-left">View Room Calendar &rarr;</Link>
               </div>
             }
           >
