@@ -62,13 +62,6 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
 
   // --- Booking Limits (Non-Admins only) ---
   if (!isAdmin) {
-    // 1. Max Duration: 4 Hours
-    const durationMs = new Date(endTime) - new Date(startTime);
-    const maxDurationMs = 4 * 60 * 60 * 1000;
-    if (durationMs > maxDurationMs) {
-      return { success: false, error: 'Booking duration cannot exceed 4 hours.' };
-    }
-
     // 2. Fetch user's existing non-cancelled bookings
     const { data: userBookings, error: userError } = await supabase
       .from('reservations')

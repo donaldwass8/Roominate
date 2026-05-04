@@ -560,7 +560,7 @@ const RoomReservationPage = () => {
               </ul>
               {!isAdmin && (
                 <p className="text-[9px] text-gray-500 mt-2 italic leading-tight">
-                  Max 4 hours per booking. Weekly usage counts towards upcoming limit.
+                  Weekly usage counts towards upcoming limit.
                 </p>
               )}
             </div>
