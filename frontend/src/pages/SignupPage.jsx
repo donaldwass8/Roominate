@@ -180,7 +180,7 @@ const SignupPage = () => {
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
             <Link to="/login" className="text-primary-orange font-semibold hover:underline">
-              Log in
+              Sign in
             </Link>
           </div>
         </div>

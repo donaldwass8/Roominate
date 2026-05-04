@@ -141,15 +141,15 @@ const Navbar = () => {
               <button 
                 onClick={() => setIsLogoutModalOpen(true)}
                 className="bg-white/20 p-1.5 px-3 text-sm font-medium rounded-full hover:bg-white/30 transition-colors flex items-center space-x-1"
-                title="Log Out"
+                title="Sign Out"
               >
-                <span>Log out</span>
+                <span>Sign out</span>
               </button>
             </div>
           </>
         ) : (
           <div className="flex items-center space-x-4 text-sm font-medium">
-            <Link to="/login" className="hover:text-white/80 transition-colors">Log in</Link>
+            <Link to="/login" className="hover:text-white/80 transition-colors">Sign in</Link>
             <Link to="/signup" className="bg-white text-primary-orange px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors shadow-sm">Sign up</Link>
           </div>
         )}
@@ -159,9 +159,9 @@ const Navbar = () => {
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleLogoutConfirm}
-        title="Log Out"
-        message="Are you sure you want to log out?"
-        confirmText="Log Out"
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
       >
         <button 
           onClick={() => {

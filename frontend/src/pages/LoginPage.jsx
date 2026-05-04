@@ -28,7 +28,7 @@ const LoginPage = () => {
       if (signInError) throw signInError;
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || 'Failed to log in');
+      setError(err.message || 'Failed to sign in');
     } finally {
       setLoading(false);
     }

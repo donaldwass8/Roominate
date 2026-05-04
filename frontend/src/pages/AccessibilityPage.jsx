@@ -41,7 +41,7 @@ const AccessibilityPage = () => {
       return;
     }
     if (!user) {
-      toast.error("Please log in to verify accessibility information.");
+      toast.error("Please sign in to verify accessibility information.");
       return;
     }
     setIsConfirmModalOpen(true);
