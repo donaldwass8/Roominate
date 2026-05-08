@@ -8,10 +8,25 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [guestLoading, setGuestLoading] = useState(false);
+  const { signIn, signInAsGuest } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
+
+  const handleGuestLogin = async () => {
+    setError('');
+    try {
+      setGuestLoading(true);
+      const { error: signInError } = await signInAsGuest();
+      if (signInError) throw signInError;
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Failed to sign in as guest');
+    } finally {
+      setGuestLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,7 +105,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || guestLoading}
               className="w-full bg-primary-orange text-white py-2.5 rounded-lg font-semibold hover:bg-orange-600 focus:ring-4 focus:ring-orange-500/30 transition-all disabled:opacity-70 flex justify-center items-center"
             >
               {loading ? (
@@ -100,6 +115,27 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+
+          <div className="mt-4 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGuestLogin}
+            disabled={loading || guestLoading}
+            className="mt-4 w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 transition-all disabled:opacity-70 flex justify-center items-center"
+          >
+            {guestLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            ) : (
+              'Continue as Guest'
+            )}
+          </button>
 
           <div className="mt-8 text-center text-sm text-gray-600">
             Don't have an account?{' '}
