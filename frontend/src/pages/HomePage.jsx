@@ -5,6 +5,7 @@ import StatCard from '../components/StatCard';
 import ReservationCard, { ReservationSkeleton } from '../components/ReservationCard';
 import QuickBookPanel from '../components/QuickBookPanel';
 import BookingModal from '../components/BookingModal';
+import { useAuth } from '../context/AuthContext';
 import { getUserStats } from '../services/userService';
 import { getReservations } from '../services/reservationService';
 import { getRooms, getFavorites } from '../services/roomService';
@@ -12,12 +13,25 @@ import { getBuildings } from '../services/buildingService';
 import AiAssistant from '../components/AiAssistant';
 
 const HomePage = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [upcoming, setUpcoming] = useState([]);
   const [quickRooms, setQuickRooms] = useState([]);
   const [favoriteRoomId, setFavoriteRoomId] = useState(null);
   const [selectedRoomToBook, setSelectedRoomToBook] = useState(null);
+
+  const getDisplayName = (authUser) => {
+    if (!authUser) return '';
+
+    const metadata = authUser.user_metadata || {};
+    const fullName = metadata.full_name || [metadata.first_name, metadata.last_name].filter(Boolean).join(' ') || metadata.name;
+    const emailName = authUser.email ? authUser.email.split('@')[0] : null;
+
+    return (fullName || emailName || '').split(' ')[0];
+  };
+
+  const displayName = getDisplayName(user);
 
   const loadData = async () => {
     setLoading(true);
@@ -56,7 +70,9 @@ const HomePage = () => {
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Howdy, John</h1>
+          {displayName ? (
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Howdy, {displayName}</h1>
+          ) : null}
           <p className="text-gray-500 mt-1">
             {loading ? 'Checking your reservations...' : `You have ${upcoming.length} upcoming reservation${upcoming.length !== 1 ? 's' : ''} this week.`}
           </p>
