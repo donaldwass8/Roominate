@@ -8,7 +8,8 @@ const ConfirmModal = ({
   title = "Confirm Action", 
   message, 
   confirmText = "Confirm", 
-  cancelText = "Cancel" 
+  cancelText = "Cancel",
+  children 
 }) => {
   if (!isOpen) return null;
 
@@ -35,6 +36,12 @@ const ConfirmModal = ({
           
           <p className="text-gray-600 mb-8 text-[15px]">{message}</p>
           
+          {children && (
+            <div className="mb-4">
+              {children}
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={onClose}

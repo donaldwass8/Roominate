@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Calendar, ChevronRight, ChevronLeft, Download, Filter } from 'lucide-react';
 import { getAllReservations } from '../services/reservationService';
 import { getBuildings } from '../services/buildingService';
@@ -284,10 +285,10 @@ const BookingHistoryPage = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-primary-orange text-sm font-semibold hover:text-orange-700 transition-colors flex items-center justify-end w-full group">
+                        <Link to={`/history/${res.id}`} className="text-primary-orange text-sm font-semibold hover:text-orange-700 transition-colors flex items-center justify-end w-full group">
                           Details
                           <ChevronRight className="w-4 h-4 ml-0.5 transform group-hover:translate-x-0.5 transition-transform" />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   )

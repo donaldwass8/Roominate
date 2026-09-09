@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getRoomById, updateRoomAccessibilityVerifiedTime } from '../services/roomService';
+import { getRoomById } from '../services/roomService';
 import { X } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const getOrdinalSuffix = (i) => {
   if (!i) return '';
@@ -13,23 +15,45 @@ const getOrdinalSuffix = (i) => {
   return "th";
 };
 
+const formatLastVerified = (dateInput) => {
+  if (!dateInput) return "Not yet verified";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "Not yet verified";
+  
+  const optionsDate = { month: 'long', day: 'numeric', year: 'numeric' };
+  const optionsTime = { hour: 'numeric', minute: '2-digit', hour12: true };
+  const dateStr = date.toLocaleDateString('en-US', optionsDate);
+  const timeStr = date.toLocaleTimeString('en-US', optionsTime);
+  return `${dateStr} at ${timeStr}`;
+};
+
 const AccessibilityPage = () => {
   const { id } = useParams();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [lastVerifiedDate, setLastVerifiedDate] = useState('9:52:07 AM - 3/5/26');
+  const [lastVerifiedDate, setLastVerifiedDate] = useState('April 28, 2026 at 10:00 AM');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const { user } = useAuth();
 
   const handleValidateClick = () => {
+    if (!room || !id) {
+      toast.error("Room accessibility information could not be found.");
+      return;
+    }
+    if (!user) {
+      toast.error("Please sign in to verify accessibility information.");
+      return;
+    }
     setIsConfirmModalOpen(true);
   };
 
   const handleConfirmValidation = async () => {
     const now = new Date();
-    const formattedDate = `${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })} - ${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear().toString().slice(-2)}`;
+    const isoString = now.toISOString();
     
-    setLastVerifiedDate(formattedDate);
-    await updateRoomAccessibilityVerifiedTime(id, formattedDate);
+    // Prototype note: Last Verified uses demo state/fallback data. Persistent verification history is planned for the full implementation.
+    setLastVerifiedDate(formatLastVerified(isoString));
+    toast.success("Accessibility information marked as valid.");
     setIsConfirmModalOpen(false);
   };
 
@@ -40,7 +64,9 @@ const AccessibilityPage = () => {
         const data = await getRoomById(id);
         setRoom(data);
         if (data && data.accessibility_last_verified) {
-          setLastVerifiedDate(data.accessibility_last_verified);
+          setLastVerifiedDate(formatLastVerified(data.accessibility_last_verified));
+        } else {
+          setLastVerifiedDate('April 28, 2026 at 10:00 AM');
         }
       } catch (err) {
         console.error("Failed to fetch room", err);

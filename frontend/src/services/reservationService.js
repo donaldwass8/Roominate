@@ -62,13 +62,6 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
 
   // --- Booking Limits (Non-Admins only) ---
   if (!isAdmin) {
-    // 1. Max Duration: 4 Hours
-    const durationMs = new Date(endTime) - new Date(startTime);
-    const maxDurationMs = 4 * 60 * 60 * 1000;
-    if (durationMs > maxDurationMs) {
-      return { success: false, error: 'Booking duration cannot exceed 4 hours.' };
-    }
-
     // 2. Fetch user's existing non-cancelled bookings
     const { data: userBookings, error: userError } = await supabase
       .from('reservations')
@@ -106,15 +99,23 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
   }
   // --- End Booking Limits ---
 
-  // Check for conflicts: existing reservation for the same room that overlaps.
-  // Overlap logic: existing start < new end AND existing end > new start.
+  // --- FR-16: Automatically enforce a 5-minute buffer after each room reservation. ---
+  // A new reservation cannot start within 5 minutes of an existing reservation's end.
+  // And a new reservation cannot end within 5 minutes of an existing reservation's start.
+  // We check this by expanding the new reservation's conflict window by 5 minutes on both sides.
+  const newStartObj = new Date(startTime);
+  const newEndObj = new Date(endTime);
+  
+  const newEndWithBuffer = new Date(newEndObj.getTime() + 5 * 60000).toISOString();
+  const newStartMinusBuffer = new Date(newStartObj.getTime() - 5 * 60000).toISOString();
+
   const { data: conflicts, error: conflictError } = await supabase
     .from('reservations')
-    .select('id')
+    .select('id, start_time, end_time')
     .eq('room_id', roomId)
     .neq('status', 'cancelled')
-    .lt('start_time', endIso)
-    .gt('end_time', startIso);
+    .lt('start_time', newEndWithBuffer)
+    .gt('end_time', newStartMinusBuffer);
 
   if (conflictError) {
     console.error('Error checking conflicts:', conflictError);
@@ -122,7 +123,7 @@ export const createReservation = async (userId, roomId, startTime, endTime, purp
   }
 
   if (conflicts && conflicts.length > 0) {
-    return { success: false, error: 'This room is already booked for the selected time window. Please choose another time.' };
+    return { success: false, error: 'This room requires a 5-minute buffer after each reservation. Please choose a different time.' };
   }
 
   const { data, error } = await supabase
@@ -258,4 +259,49 @@ export const getUserBookingStats = async (userId) => {
   const upcomingCount = data.filter(r => new Date(r.start_time) > now).length;
 
   return { dailyCount, upcomingCount };
+};
+
+export const getReservationById = async (id) => {
+  if (!supabase) return null;
+  
+  const { data, error } = await supabase
+    .from('reservations')
+    .select(`
+      id, room_id, start_time, end_time, status, user_id, room_code, purpose, organizer_name,
+      study_rooms (
+        name,
+        capacity,
+        amenities,
+        usage_notes,
+        buildings (
+          name
+        )
+      )
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching reservation by id:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    room_id: data.room_id,
+    start_time: data.start_time,
+    end_time: data.end_time,
+    status: data.status,
+    purpose: data.purpose,
+    organizer_name: data.organizer_name,
+    user_id: data.user_id,
+    room_code: data.room_code,
+    room_name: data.study_rooms?.name || 'Unknown Room',
+    capacity: data.study_rooms?.capacity || 0,
+    amenities: data.study_rooms?.amenities || [],
+    usage_notes: data.study_rooms?.usage_notes || '',
+    building_name: data.study_rooms?.buildings?.name || 'Unknown Building'
+  };
 };

@@ -37,11 +37,13 @@ export const AuthProvider = ({ children }) => {
     loading,
     signUp: (data) => supabase?.auth.signUp(data),
     signIn: (data) => supabase?.auth.signInWithPassword(data),
+    signInAsGuest: () => supabase?.auth.signInAnonymously(),
     signOut: () => supabase?.auth.signOut(),
     resetPassword: (email) => supabase?.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     }),
     updatePassword: (newPassword) => supabase?.auth.updateUser({ password: newPassword }),
+    deleteAccount: () => supabase?.functions.invoke('delete-account'),
   };
 
   return (
